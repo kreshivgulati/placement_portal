@@ -1,0 +1,486 @@
+{% extends 'base.html' %}
+{% block title %}Edit {{ student.name }} — Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+  .page-hero {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 2.2rem 0 1.5rem;
+    margin-bottom: 0;
+  }
+  .hero-inner {
+    padding: 0 2rem;
+    display: flex; align-items: center;
+    justify-content: space-between; gap: 1rem; flex-wrap: wrap;
+  }
+  .hero-identity { display: flex; align-items: center; gap: 1rem; }
+  .student-avatar {
+    width: 52px; height: 52px; border-radius: 13px;
+    background: var(--blue-lt); color: var(--blue);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 20px; flex-shrink: 0;
+    border: 2px solid #BFDBFE;
+  }
+  .hero-identity h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.5rem; font-weight: 400; margin-bottom: .15rem;
+  }
+  .hero-identity p { font-size: 13px; color: var(--mid); margin: 0; }
+
+  /* ── LAYOUT ── */
+  .edit-layout {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 1.5rem;
+    align-items: start;
+  }
+  @media(max-width:900px) {
+    .edit-layout { grid-template-columns: 1fr; }
+    .sidebar-col { order: -1; }
+  }
+
+  /* ── FORM CARD ── */
+  .form-card {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 14px; overflow: hidden;
+    margin-bottom: 1.25rem;
+  }
+  .form-card:last-child { margin-bottom: 0; }
+  .fc-header {
+    padding: .9rem 1.4rem;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .fc-icon {
+    width: 28px; height: 28px; border-radius: 7px;
+    background: var(--blue-lt); color: var(--blue);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; flex-shrink: 0;
+  }
+  .fc-header h2 {
+    font-size: 14px; font-weight: 600; color: var(--dark); margin: 0;
+  }
+  .fc-body { padding: 1.4rem; }
+
+  /* ── FORM FIELDS ── */
+  .field-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px,1fr));
+    gap: 1.1rem;
+  }
+  .field-grid.full { grid-template-columns: 1fr; }
+  .form-group { display: flex; flex-direction: column; gap: .35rem; }
+  .form-group label {
+    font-size: 12px; font-weight: 600; color: var(--light);
+    text-transform: uppercase; letter-spacing: .05em;
+  }
+  .form-control {
+    height: 40px; border: 1px solid var(--border);
+    border-radius: 9px; font-size: 14px;
+    padding: 0 .85rem; width: 100%;
+    background: var(--white); color: var(--dark);
+    transition: border-color .15s, box-shadow .15s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .form-control:focus {
+    outline: none; border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+    background: var(--white);
+  }
+  .form-control:disabled {
+    background: var(--surface); color: var(--mid); cursor: not-allowed;
+  }
+  select.form-control { cursor: pointer; }
+  .field-hint { font-size: 11px; color: var(--light); margin-top: .1rem; }
+
+  /* ── BADGES ── */
+  .badge {
+    font-weight: 500; font-size: 11px;
+    padding: .35em .75em; border-radius: 6px;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .b-active      { background:#ECFDF5; color:#065F46; border:1px solid #A7F3D0; }
+  .b-blacklisted { background:#FEF2F2; color:#991B1B; border:1px solid #FECACA; }
+  .b-deactivated { background:#F1F5F9; color:#475569; border:1px solid #E2E8F0; }
+
+  /* ── CGPA CHIP ── */
+  .cgpa-chip {
+    display: inline-flex; align-items: center;
+    font-size: 12px; font-weight: 600;
+    border-radius: 5px; padding: .15rem .5rem;
+  }
+  .cgpa-high { background:#ECFDF5; color:#065F46; }
+  .cgpa-mid  { background:#EFF6FF; color:#1E40AF; }
+  .cgpa-low  { background:#FEF2F2; color:#991B1B; }
+
+  /* ── SIDEBAR ACTION CARD ── */
+  .action-card {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 14px; overflow: hidden; margin-bottom: 1.25rem;
+  }
+  .action-card .ac-header {
+    padding: .9rem 1.4rem; border-bottom: 1px solid var(--border);
+    font-size: 14px; font-weight: 600; color: var(--dark);
+  }
+  .action-card .ac-body {
+    padding: 1rem; display: flex; flex-direction: column; gap: 8px;
+  }
+  .action-card form { margin: 0; }
+  .ac-divider { height: 1px; background: var(--border); margin: .2rem 0; }
+
+  .btn-action {
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+    width: 100%; padding: .55rem 1rem;
+    border-radius: 9px; font-size: 14px; font-weight: 500;
+    cursor: pointer; transition: all .15s;
+    border: 1px solid var(--border); background: var(--white); color: var(--mid);
+    text-decoration: none; font-family: 'DM Sans', sans-serif;
+  }
+  .btn-action:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-lt); }
+  .btn-action.danger { background:#FEF2F2; color:#991B1B; border-color:#FECACA; }
+  .btn-action.danger:hover { background:#EF4444; color:#fff; border-color:#EF4444; }
+  .btn-action.warn { background:#FFFBEB; color:#92400E; border-color:#FDE68A; }
+  .btn-action.warn:hover { background:#F59E0B; color:#fff; border-color:#F59E0B; }
+
+  /* ── SNAP ROWS ── */
+  .snap-row {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 13px; padding: .5rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .snap-row:last-child { border-bottom: none; }
+  .sr-label { color: var(--light); }
+  .sr-val   { font-weight: 500; color: var(--dark); }
+
+  /* flash messages */
+  .flash-success {
+    background: #ECFDF5; border: 1px solid #A7F3D0;
+    color: #065F46; border-radius: 10px;
+    padding: .85rem 1.1rem; font-size: 14px;
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 1.25rem;
+  }
+  .flash-error {
+    background: #FEF2F2; border: 1px solid #FECACA;
+    color: #991B1B; border-radius: 10px;
+    padding: .85rem 1.1rem; font-size: 14px;
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 1.25rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- HERO -->
+<div class="page-hero">
+  <div class="hero-inner container-fluid">
+    <div class="hero-identity">
+      <a href="{{ url_for('admin.student_detail', student_id=student.id) }}"
+         style="font-size:13px;color:var(--mid);text-decoration:none;
+                display:inline-flex;align-items:center;gap:5px;margin-right:.5rem">
+        <i class="bi bi-arrow-left"></i>
+      </a>
+      <div class="student-avatar">{{ student.name[0]|upper }}</div>
+      <div>
+        <h1>Edit {{ student.name }}</h1>
+        <p>
+          <span style="font-family:monospace;font-size:12px;
+                       background:var(--surface);border:1px solid var(--border);
+                       border-radius:5px;padding:.1rem .4rem">
+            {{ student.student_id }}
+          </span>
+          &nbsp;·&nbsp;
+          <span class="badge b-{{ student.account_status }}">
+            {{ student.account_status|capitalize }}
+          </span>
+        </p>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <a href="{{ url_for('admin.student_detail', student_id=student.id) }}"
+         class="btn btn-outline-secondary btn-sm"
+         style="display:flex;align-items:center;gap:5px">
+        <i class="bi bi-x"></i> Cancel
+      </a>
+    </div>
+  </div>
+</div>
+
+<div class="container-fluid px-4 mt-3">
+
+  <!-- Flash messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <div class="flash-{{ 'success' if category == 'success' else 'error' }}">
+        <i class="bi bi-{{ 'check-circle' if category == 'success' else 'exclamation-circle' }}"></i>
+        {{ message }}
+      </div>
+    {% endfor %}
+  {% endwith %}
+
+  <div class="edit-layout">
+
+    <!-- ── LEFT: FORM ── -->
+    <div>
+      <form method="POST"
+            action="{{ url_for('admin.edit_student', student_id=student.id) }}"
+            enctype="multipart/form-data">
+
+        <!-- Personal Info -->
+        <div class="form-card">
+          <div class="fc-header">
+            <div class="fc-icon"><i class="bi bi-person"></i></div>
+            <h2>Personal Information</h2>
+          </div>
+          <div class="fc-body">
+            <div class="field-grid">
+
+              <div class="form-group">
+                <label for="name">Full Name</label>
+                <input type="text" id="name" name="name" class="form-control"
+                       value="{{ student.name }}" required>
+              </div>
+
+              <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" class="form-control"
+                       value="{{ student.email }}" required>
+              </div>
+
+              <div class="form-group">
+                <label for="phone">Phone Number</label>
+                <input type="text" id="phone" name="phone" class="form-control"
+                       value="{{ student.phone or '' }}"
+                       placeholder="Optional">
+              </div>
+
+              <div class="form-group">
+                <label for="student_id_field">Student ID</label>
+                <input type="text" id="student_id_field" class="form-control"
+                       value="{{ student.student_id }}" disabled>
+                <span class="field-hint">Student ID cannot be changed.</span>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- Academic Info -->
+        <div class="form-card">
+          <div class="fc-header">
+            <div class="fc-icon"><i class="bi bi-mortarboard"></i></div>
+            <h2>Academic Details</h2>
+          </div>
+          <div class="fc-body">
+            <div class="field-grid">
+
+              <div class="form-group">
+                <label for="branch">Branch</label>
+                <input type="text" id="branch" name="branch" class="form-control"
+                       value="{{ student.branch }}" required>
+              </div>
+
+              <div class="form-group">
+                <label for="year">Year</label>
+                <select id="year" name="year" class="form-control" required>
+                  {% for y in [1, 2, 3, 4, 5] %}
+                  <option value="{{ y }}" {% if student.year == y %}selected{% endif %}>
+                    Year {{ y }}
+                  </option>
+                  {% endfor %}
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="cgpa">CGPA</label>
+                <input type="number" id="cgpa" name="cgpa" class="form-control"
+                       value="{{ student.cgpa }}"
+                       step="0.01" min="0" max="10" required>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+        <!-- Skills -->
+        <div class="form-card">
+          <div class="fc-header">
+            <div class="fc-icon"><i class="bi bi-stars"></i></div>
+            <h2>Skills</h2>
+          </div>
+          <div class="fc-body">
+            <div class="form-group">
+              <label for="skills">Skills</label>
+              <input type="text" id="skills" name="skills" class="form-control"
+                     value="{{ student.skills or '' }}"
+                     placeholder="e.g. Python, SQL, Machine Learning">
+              <span class="field-hint">Comma-separated list of skills.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Resume -->
+        <div class="form-card">
+          <div class="fc-header">
+            <div class="fc-icon"><i class="bi bi-file-earmark-person"></i></div>
+            <h2>Resume</h2>
+          </div>
+          <div class="fc-body">
+            {% if student.resume_path %}
+            <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;
+                        background:var(--surface);border:1px solid var(--border);
+                        border-radius:9px;padding:.75rem 1rem">
+              <i class="bi bi-file-earmark-check" style="color:#10B981;font-size:18px"></i>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:13px;font-weight:500;color:var(--dark)">
+                  Resume on file
+                </div>
+                <div style="font-size:11px;color:var(--light);
+                            white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                  {{ student.resume_path }}
+                </div>
+              </div>
+              <a href="/{{ student.resume_path }}" target="_blank"
+                 style="font-size:12px;color:var(--blue);text-decoration:none;
+                        display:flex;align-items:center;gap:4px;flex-shrink:0">
+                <i class="bi bi-box-arrow-up-right"></i> View
+              </a>
+            </div>
+            {% endif %}
+            <div class="form-group">
+              <label for="resume">{{ 'Replace Resume' if student.resume_path else 'Upload Resume' }}</label>
+              <input type="file" id="resume" name="resume" class="form-control"
+                     accept=".pdf,.doc,.docx"
+                     style="height:auto;padding:.5rem .85rem">
+              <span class="field-hint">PDF, DOC, or DOCX. Leave blank to keep existing.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Save button -->
+        <div style="display:flex;justify-content:flex-end;gap:.75rem;margin-top:.25rem">
+          <a href="{{ url_for('admin.student_detail', student_id=student.id) }}"
+             class="btn btn-outline-secondary"
+             style="display:flex;align-items:center;gap:5px">
+            Cancel
+          </a>
+          <button type="submit" class="btn btn-primary"
+                  style="display:flex;align-items:center;gap:6px;
+                         padding:.55rem 1.5rem;font-size:14px">
+            <i class="bi bi-check-lg"></i> Save Changes
+          </button>
+        </div>
+
+      </form>
+    </div>
+
+    <!-- ── RIGHT: SIDEBAR ── -->
+    <div class="sidebar-col">
+
+      <!-- Snapshot -->
+      <div class="form-card">
+        <div class="fc-header">
+          <div class="fc-icon"><i class="bi bi-info-circle"></i></div>
+          <h2>Current Snapshot</h2>
+        </div>
+        <div class="fc-body" style="padding:1rem 1.4rem">
+          <div class="snap-row">
+            <span class="sr-label">Student ID</span>
+            <span class="sr-val" style="font-family:monospace;font-size:12px">
+              {{ student.student_id }}
+            </span>
+          </div>
+          <div class="snap-row">
+            <span class="sr-label">Branch</span>
+            <span class="sr-val">{{ student.branch }}</span>
+          </div>
+          <div class="snap-row">
+            <span class="sr-label">Year</span>
+            <span class="sr-val">Year {{ student.year }}</span>
+          </div>
+          <div class="snap-row">
+            <span class="sr-label">CGPA</span>
+            <span class="sr-val">
+              <span class="cgpa-chip
+                {% if student.cgpa >= 8.0 %}cgpa-high
+                {% elif student.cgpa >= 6.0 %}cgpa-mid
+                {% else %}cgpa-low{% endif %}">
+                {{ student.cgpa }}
+              </span>
+            </span>
+          </div>
+          <div class="snap-row">
+            <span class="sr-label">Status</span>
+            <span class="sr-val">
+              <span class="badge b-{{ student.account_status }}">
+                {{ student.account_status|capitalize }}
+              </span>
+            </span>
+          </div>
+          <div class="snap-row">
+            <span class="sr-label">Registered</span>
+            <span class="sr-val" style="font-size:12px">
+              {{ student.created_at.strftime('%d %b %Y') if student.created_at else '—' }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Admin Actions -->
+      <div class="action-card">
+        <div class="ac-header">
+          <i class="bi bi-shield-check me-2" style="color:var(--blue)"></i>
+          Admin Actions
+        </div>
+        <div class="ac-body">
+
+          <a href="{{ url_for('admin.student_detail', student_id=student.id) }}"
+             class="btn-action">
+            <i class="bi bi-eye"></i> View Profile
+          </a>
+
+          <div class="ac-divider"></div>
+
+          <!-- Blacklist toggle — only route that exists for students -->
+          {% if student.account_status == 'active' %}
+          <form method="POST"
+                action="{{ url_for('admin.blacklist_student', student_id=student.id) }}"
+                onsubmit="return confirm('Blacklist {{ student.name }}? They will not be able to log in.')">
+            <button type="submit" class="btn-action warn">
+              <i class="bi bi-slash-circle"></i> Blacklist Student
+            </button>
+          </form>
+          {% else %}
+          {# No activate_student route — link back to detail so admin can see current state #}
+          <div style="font-size:12px;color:var(--light);
+                      background:var(--surface);border:1px solid var(--border);
+                      border-radius:8px;padding:.6rem .85rem;
+                      display:flex;align-items:center;gap:6px">
+            <i class="bi bi-info-circle"></i>
+            Account is <strong>{{ student.account_status }}</strong>.
+            Reactivation not available here.
+          </div>
+          {% endif %}
+
+          <div class="ac-divider"></div>
+
+          <!-- Delete -->
+          <form method="POST"
+                action="{{ url_for('admin.delete_student', student_id=student.id) }}"
+                onsubmit="return confirm('Permanently delete {{ student.name }}? This cannot be undone.')">
+            <button type="submit" class="btn-action danger">
+              <i class="bi bi-trash3"></i> Delete Student
+            </button>
+          </form>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,670 @@
+{% extends 'base.html' %}
+{% block title %}{{ drive.job_role}} — Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ── HERO ── */
+  .page-hero {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 2.2rem 0 1.8rem;
+    margin-bottom: 2rem;
+  }
+  .page-hero h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.9rem; font-weight: 400; margin-bottom: .3rem;
+  }
+  .page-hero p { color: var(--mid); font-size: 14px; }
+
+  /* ── LAYOUT ── */
+  .detail-layout {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 1.5rem;
+    align-items: start;
+  }
+  @media(max-width:960px) {
+    .detail-layout { grid-template-columns: 1fr; }
+    .sidebar-col { order: -1; }
+  }
+
+  /* ── SECTION CARD ── */
+  .section-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 14px; overflow: hidden;
+    margin-bottom: 1.25rem;
+  }
+  .sc-header {
+    padding: .9rem 1.4rem;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .sc-header h2 {
+    font-size: 14px; font-weight: 600;
+    color: var(--dark); margin: 0; flex: 1;
+  }
+  .sc-icon {
+    width: 28px; height: 28px; border-radius: 7px;
+    background: var(--blue-lt); color: var(--blue);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; flex-shrink: 0;
+  }
+  .sc-body { padding: 1.4rem; }
+
+  /* ── INFO GRID ── */
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 1.25rem;
+  }
+  .info-item .ii-label {
+    font-size: 11px; color: var(--light);
+    text-transform: uppercase; letter-spacing: .05em;
+    margin-bottom: .3rem;
+  }
+  .info-item .ii-val {
+    font-size: 14px; font-weight: 500; color: var(--dark);
+    word-break: break-word;
+  }
+  .info-item .ii-val.muted { color: var(--mid); font-weight: 400; }
+
+  /* ── BADGES ── */
+  .badge {
+    font-weight: 500; font-size: 11px;
+    padding: .35em .75em; border-radius: 6px;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .b-pending     { background:#FFFBEB; color:#92400E; border:1px solid #FDE68A; }
+  .b-approved    { background:#ECFDF5; color:#065F46; border:1px solid #A7F3D0; }
+  .b-rejected    { background:#FEF2F2; color:#991B1B; border:1px solid #FECACA; }
+  .b-closed      { background:#F1F5F9; color:#475569; border:1px solid #E2E8F0; }
+  .b-applied     { background:#EFF6FF; color:#1E40AF; border:1px solid #BFDBFE; }
+  .b-shortlisted { background:#F5F3FF; color:#5B21B6; border:1px solid #DDD6FE; }
+  .b-selected    { background:#ECFDF5; color:#065F46; border:1px solid #A7F3D0; }
+
+  /* ── TAG CHIPS ── */
+  .tag-row { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1rem; }
+  .tag {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 12px; color: var(--mid);
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 6px; padding: .28rem .65rem;
+  }
+  .tag i { font-size: 11px; color: var(--light); }
+
+  /* ── DESCRIPTION ── */
+  .desc-block {
+    font-size: 14px; color: var(--mid);
+    line-height: 1.75; white-space: pre-wrap;
+    border-left: 3px solid var(--blue-lt);
+    padding-left: 1rem; margin: 0;
+  }
+
+  /* ── STAT MINI CARDS ── */
+  .stat-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: .75rem; margin-bottom: 1.25rem;
+  }
+  @media(max-width:600px) { .stat-row { grid-template-columns: repeat(2,1fr); } }
+  .stat-mini {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1rem;
+    text-align: center;
+  }
+  .stat-mini .sm-val {
+    font-size: 1.6rem; font-weight: 600; color: var(--dark); line-height: 1.2;
+  }
+  .stat-mini .sm-label {
+    font-size: 11px; color: var(--light);
+    text-transform: uppercase; letter-spacing: .05em;
+    margin-top: .2rem;
+  }
+
+  /* ── TABLE ── */
+  .table-card {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 14px; overflow: hidden;
+  }
+  .table-card .table { margin: 0; font-size: 14px; border-collapse: collapse; }
+  .table-card .table thead th {
+    background: var(--surface); color: var(--light);
+    font-weight: 500; font-size: 11px;
+    text-transform: uppercase; letter-spacing: .06em;
+    border-bottom: 1px solid var(--border);
+    padding: .75rem 1.1rem; white-space: nowrap;
+  }
+  .table-card .table tbody td {
+    padding: .8rem 1.1rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .table-card .table tbody tr:last-child td { border-bottom: none; }
+  .table-card .table tbody tr {
+    transition: background .12s;
+    animation: fadeIn .25s ease both;
+  }
+  .table-card .table tbody tr:hover { background: var(--surface); }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+  /* student avatar */
+  .stu-avatar {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: var(--blue-lt); color: var(--blue);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 12px; flex-shrink: 0;
+  }
+
+  /* CGPA chip */
+  .cgpa-chip {
+    display: inline-flex; align-items: center;
+    font-size: 12px; font-weight: 600;
+    border-radius: 5px; padding: .15rem .5rem;
+  }
+  .cgpa-high { background:#ECFDF5; color:#065F46; }
+  .cgpa-mid  { background:#EFF6FF; color:#1E40AF; }
+  .cgpa-low  { background:#FEF2F2; color:#991B1B; }
+
+  /* ── SIDEBAR ACTION BUTTONS ── */
+  .action-card {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 14px; overflow: hidden;
+    margin-bottom: 1.25rem;
+  }
+  .action-card .ac-header {
+    padding: .9rem 1.4rem;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px; font-weight: 600; color: var(--dark);
+  }
+  .action-card .ac-body {
+    padding: 1rem; display: flex; flex-direction: column; gap: 8px;
+  }
+  .btn-action {
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+    width: 100%; padding: .55rem 1rem;
+    border-radius: 9px; font-size: 14px; font-weight: 500;
+    cursor: pointer; transition: all .15s;
+    border: 1px solid var(--border); background: var(--white);
+    color: var(--mid); text-decoration: none;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .btn-action:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-lt); }
+  .btn-action.approve {
+    background: #ECFDF5; color: #065F46; border-color: #A7F3D0;
+  }
+  .btn-action.approve:hover { background: #10B981; color: #fff; border-color: #10B981; }
+  .btn-action.reject {
+    background: #FEF2F2; color: #991B1B; border-color: #FECACA;
+  }
+  .btn-action.reject:hover { background: #EF4444; color: #fff; border-color: #EF4444; }
+  .btn-action.warn {
+    background: #FFFBEB; color: #92400E; border-color: #FDE68A;
+  }
+  .btn-action.warn:hover { background: #F59E0B; color: #fff; border-color: #F59E0B; }
+  .action-card form { margin: 0; }
+
+  /* ── DRIVE SNAPSHOT ROWS ── */
+  .snap-row {
+    display: flex; justify-content: space-between;
+    align-items: center; font-size: 13px;
+    padding: .5rem 0; border-bottom: 1px solid var(--border);
+  }
+  .snap-row:last-child { border-bottom: none; }
+  .snap-row .sr-label { color: var(--light); }
+  .snap-row .sr-val   { font-weight: 500; color: var(--dark); text-align: right; }
+
+  /* ── ELIGIBILITY BAND ── */
+  .elig-band {
+    display: flex; flex-wrap: wrap; gap: .5rem;
+    padding: 1rem; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 10px;
+  }
+  .elig-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 12px; font-weight: 500;
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 20px; padding: .3rem .8rem; color: var(--dark);
+  }
+  .elig-chip i { color: var(--blue); font-size: 11px; }
+
+  /* ── COMPANY CARD ── */
+  .company-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 1rem;
+    display: flex; align-items: center; gap: 1rem;
+  }
+  .co-logo {
+    width: 44px; height: 44px; border-radius: 11px;
+    background: var(--blue-lt); color: var(--blue);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 17px; flex-shrink: 0;
+  }
+
+  /* ── EMPTY STATE ── */
+  .empty-state { text-align: center; padding: 3rem 2rem; }
+  .empty-state i { font-size: 2.5rem; color: var(--light); display: block; margin-bottom: .75rem; }
+  .empty-state p { font-size: 14px; color: var(--light); }
+
+  /* selected row accent */
+  tr.row-selected    { border-left: 3px solid #10B981; }
+  tr.row-shortlisted { border-left: 3px solid #7C3AED; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- HERO -->
+<div class="page-hero">
+  <div class="container-fluid px-4">
+    <a href="{{ url_for('admin.drives') }}"
+       style="font-size:13px;color:var(--mid);text-decoration:none;
+              display:inline-flex;align-items:center;gap:5px;margin-bottom:.75rem">
+      <i class="bi bi-arrow-left"></i> Back to Drives
+    </a>
+    <div class="d-flex align-items-start justify-content-between flex-wrap gap-3">
+      <div>
+        <h1>{{ drive.job_role }}</h1>
+        <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap">
+          <p style="margin:0">{{ drive.company_name }}</p>
+          <span class="badge b-{{ drive.status }}">
+            {% if drive.status == 'pending' %}<i class="bi bi-hourglass-split"></i>
+            {% elif drive.status == 'approved' %}<i class="bi bi-check-circle-fill"></i>
+            {% elif drive.status == 'closed' %}<i class="bi bi-lock-fill"></i>
+            {% else %}<i class="bi bi-x-circle-fill"></i>{% endif %}
+            {{ drive.status|capitalize }}
+          </span>
+          {% if drive.location %}
+          <span style="font-size:13px;color:var(--light)">
+            <i class="bi bi-geo-alt me-1"></i>{{ drive.location }}
+          </span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="container-fluid px-4">
+
+  <!-- APPLICATION STAT MINI CARDS -->
+  {% set total_apps  = applications|length %}
+  {% set n_applied     = applications|selectattr('status','equalto','applied')    |list|length %}
+  {% set n_short       = applications|selectattr('status','equalto','shortlisted')|list|length %}
+  {% set n_selected    = applications|selectattr('status','equalto','selected')   |list|length %}
+  {% set n_rejected    = applications|selectattr('status','equalto','rejected')   |list|length %}
+
+  <div class="stat-row">
+    <div class="stat-mini">
+      <div class="sm-val" style="color:var(--blue)">{{ total_apps }}</div>
+      <div class="sm-label">Total Applicants</div>
+    </div>
+    <div class="stat-mini">
+      <div class="sm-val" style="color:#7C3AED">{{ n_short }}</div>
+      <div class="sm-label">Shortlisted</div>
+    </div>
+    <div class="stat-mini">
+      <div class="sm-val" style="color:#10B981">{{ n_selected }}</div>
+      <div class="sm-label">Selected</div>
+    </div>
+    <div class="stat-mini">
+      <div class="sm-val" style="color:#EF4444">{{ n_rejected }}</div>
+      <div class="sm-label">Rejected</div>
+    </div>
+  </div>
+
+  <div class="detail-layout">
+
+    <!-- ── LEFT: MAIN CONTENT ── -->
+    <div>
+
+      <!-- Drive Details -->
+      <div class="section-card">
+        <div class="sc-header">
+          <div class="sc-icon"><i class="bi bi-briefcase"></i></div>
+          <h2>Drive Details</h2>
+        </div>
+        <div class="sc-body">
+
+          <!-- Tag chips -->
+          <div class="tag-row">
+            <span class="tag">
+              <i class="bi bi-briefcase"></i>
+              {{ drive.job_type.replace('_',' ')|capitalize }}
+            </span>
+            {% if drive.location %}
+            <span class="tag">
+              <i class="bi bi-geo-alt"></i>{{ drive.location }}
+            </span>
+            {% endif %}
+            {% if drive.salary_package %}
+            <span class="tag">
+              <i class="bi bi-currency-rupee"></i>{{ drive.salary_package }}
+            </span>
+            {% endif %}
+            <span class="tag">
+              <i class="bi bi-calendar3"></i>
+              Deadline: {{ drive.application_deadline }}
+            </span>
+          </div>
+
+          <!-- Info grid -->
+          <div class="info-grid mb-4">
+            <div class="info-item">
+              <div class="ii-label">Drive ID</div>
+              <div class="ii-val muted">#{{ drive.id }}</div>
+            </div>
+            <div class="info-item">
+              <div class="ii-label">Created</div>
+              <div class="ii-val muted">
+               {{ drive.created_at.strftime('%Y-%m-%d') if drive.created_at else '—' }}
+              </div>
+            </div>
+            <div class="info-item">
+              <div class="ii-label">Status</div>
+              <div class="ii-val">
+                <span class="badge b-{{ drive.status }}">{{ drive.status|capitalize }}</span>
+              </div>
+            </div>
+            <div class="info-item">
+              <div class="ii-label">Applicants</div>
+              <div class="ii-val">{{ total_apps }}</div>
+            </div>
+          </div>
+
+          <!-- Job description -->
+          {% if drive.job_description %}
+          <div style="margin-bottom:0">
+            <div style="font-size:12px;color:var(--light);text-transform:uppercase;
+                        letter-spacing:.05em;margin-bottom:.6rem">
+              Job Description
+            </div>
+            <p class="desc-block">{{ drive.job_description }}</p>
+          </div>
+          {% endif %}
+
+        </div>
+      </div>
+
+      <!-- Eligibility -->
+      <div class="section-card">
+        <div class="sc-header">
+          <div class="sc-icon"><i class="bi bi-mortarboard"></i></div>
+          <h2>Eligibility Criteria</h2>
+        </div>
+        <div class="sc-body">
+          <div class="elig-band">
+            <div class="elig-chip">
+              <i class="bi bi-graph-up"></i>
+              Min CGPA: <strong>
+                {{ drive.eligibility_cgpa if drive.eligibility_cgpa > 0 else 'No minimum' }}
+              </strong>
+            </div>
+            <div class="elig-chip">
+              <i class="bi bi-diagram-3"></i>
+              Branches: <strong>{{ drive.eligible_branches or 'All branches' }}</strong>
+            </div>
+            <div class="elig-chip">
+              <i class="bi bi-calendar2-week"></i>
+              Years: <strong>{{ drive.eligible_years or 'All years' }}</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Applications table -->
+      <div class="section-card">
+        <div class="sc-header">
+          <div class="sc-icon"><i class="bi bi-people"></i></div>
+          <h2>Applications ({{ total_apps }})</h2>
+          {% if total_apps > 0 %}
+          <div style="margin-left:auto;display:flex;gap:6px">
+            <span class="badge b-applied">{{ n_applied }} Applied</span>
+            <span class="badge b-shortlisted">{{ n_short }} Shortlisted</span>
+            <span class="badge b-selected">{{ n_selected }} Selected</span>
+          </div>
+          {% endif %}
+        </div>
+
+        {% if applications %}
+        <div class="table-responsive">
+          <table class="table mb-0">
+            <thead>
+              <tr>
+                <th>Student</th>
+                <th>Branch</th>
+                <th>Year</th>
+                <th>CGPA</th>
+                <th>Resume</th>
+                <th>Status</th>
+                <th>Applied On</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for a in applications %}
+              <tr class="row-{{ a.status }}">
+
+                <!-- Student -->
+                <td>
+                  <div class="d-flex align-items-center gap-2">
+                    <div class="stu-avatar">{{ a.student_name[0]|upper }}</div>
+                    <div style="min-width:0">
+                      <div style="font-weight:600;font-size:13px;
+                                  white-space:nowrap;overflow:hidden;
+                                  text-overflow:ellipsis;max-width:140px">
+                        {{ a.student_name }}
+                      </div>
+                      <div style="font-size:11px;color:var(--light)">
+                        {{ a.student_id }}
+                      </div>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- Branch -->
+                <td>
+                  <span style="font-size:12px;background:var(--surface);
+                               border:1px solid var(--border);border-radius:5px;
+                               padding:.15rem .5rem;color:var(--mid)">
+                    {{ a.branch }}
+                  </span>
+                </td>
+
+                <!-- Year -->
+                <td style="font-size:13px;color:var(--mid)">{{ a.year }}</td>
+
+                <!-- CGPA -->
+                <td>
+                  <span class="cgpa-chip
+                    {% if a.cgpa >= 8.0 %}cgpa-high
+                    {% elif a.cgpa >= 6.0 %}cgpa-mid
+                    {% else %}cgpa-low{% endif %}">
+                    {{ a.cgpa }}
+                  </span>
+                </td>
+
+                <!-- Resume -->
+                <td>
+                  {% if a.resume_path %}
+                  <a href="/{{ a.resume_path }}" target="_blank"
+                     style="display:inline-flex;align-items:center;gap:4px;
+                            font-size:12px;color:var(--blue);font-weight:500;
+                            background:var(--blue-lt);border:1px solid #BFDBFE;
+                            border-radius:6px;padding:.25rem .65rem;text-decoration:none">
+                    <i class="bi bi-file-earmark-arrow-down"></i> CV
+                  </a>
+                  {% else %}
+                  <span style="color:var(--light);font-size:12px">—</span>
+                  {% endif %}
+                </td>
+
+                <!-- Status -->
+                <td>
+                  <span class="badge b-{{ a.status }}">
+                    {% if a.status == 'applied' %}<i class="bi bi-send"></i>
+                    {% elif a.status == 'shortlisted' %}<i class="bi bi-list-check"></i>
+                    {% elif a.status == 'selected' %}<i class="bi bi-trophy"></i>
+                    {% else %}<i class="bi bi-x"></i>{% endif %}
+                    {{ a.status|capitalize }}
+                  </span>
+                </td>
+
+                <!-- Applied date -->
+                <td style="font-size:12px;color:var(--light);white-space:nowrap">
+                  {{ drive.created_at.strftime('%Y-%m-%d') if drive.created_at else '—' }}
+                </td>
+
+                <!-- Actions -->
+                <td>
+                  <a href="{{ url_for('admin.student_detail', student_id=a.student_db_id) }}"
+                     style="display:inline-flex;align-items:center;gap:4px;
+                            font-size:12px;font-weight:500;color:var(--mid);
+                            background:var(--white);border:1px solid var(--border);
+                            border-radius:7px;padding:.3rem .7rem;text-decoration:none;
+                            transition:all .15s"
+                     onmouseover="this.style.borderColor='var(--blue)';this.style.color='var(--blue)'"
+                     onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--mid)'">
+                    <i class="bi bi-eye"></i> Student
+                  </a>
+                </td>
+
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+          <i class="bi bi-inbox"></i>
+          <p>No students have applied to this drive yet.</p>
+        </div>
+        {% endif %}
+      </div>
+
+    </div>
+
+    <!-- ── RIGHT: SIDEBAR ── -->
+    <div class="sidebar-col">
+
+      <!-- Admin Actions -->
+      <div class="action-card">
+        <div class="ac-header">
+          <i class="bi bi-shield-check me-2" style="color:var(--blue)"></i>Admin Actions
+        </div>
+        <div class="ac-body">
+
+          {% if drive.status == 'pending' %}
+          <form method="POST"
+                action="{{ url_for('admin.approve_drive', drive_id=drive.id) }}">
+            <button type="submit" class="btn-action approve">
+              <i class="bi bi-check-circle-fill"></i> Approve Drive
+            </button>
+          </form>
+          <form method="POST"
+                action="{{ url_for('admin.reject_drive', drive_id=drive.id) }}"
+                onsubmit="return confirm('Reject this drive?')">
+            <button type="submit" class="btn-action reject">
+              <i class="bi bi-x-circle-fill"></i> Reject Drive
+            </button>
+          </form>
+
+          {% elif drive.status == 'approved' %}
+          <form method="POST"
+                action="{{ url_for('admin.close_drive', drive_id=drive.id) }}"
+                onsubmit="return confirm('Close this drive? Students will no longer be able to apply.')">
+            <button type="submit" class="btn-action warn">
+              <i class="bi bi-lock-fill"></i> Close Drive
+            </button>
+          </form>
+
+          {% elif drive.status == 'rejected' %}
+          <form method="POST"
+                action="{{ url_for('admin.approve_drive', drive_id=drive.id) }}">
+            <button type="submit" class="btn-action approve">
+              <i class="bi bi-arrow-counterclockwise"></i> Re-approve Drive
+            </button>
+          </form>
+          {% endif %}
+
+          <a href="{{ url_for('admin.company_detail', company_id=drive.company_id) }}"
+             class="btn-action">
+            <i class="bi bi-building"></i> View Company
+          </a>
+          <a href="{{ url_for('admin.drives') }}" class="btn-action">
+            <i class="bi bi-arrow-left"></i> Back to All Drives
+          </a>
+
+        </div>
+      </div>
+
+      <!-- Drive Snapshot -->
+      <div class="section-card">
+        <div class="sc-header">
+          <div class="sc-icon"><i class="bi bi-info-circle"></i></div>
+          <h2>Drive Snapshot</h2>
+        </div>
+        <div class="sc-body" style="padding:1rem 1.4rem">
+          <div class="snap-row">
+            <span class="sr-label">Drive ID</span>
+            <span class="sr-val" style="font-family:monospace">#{{ drive.id }}</span>
+          </div>
+          <div class="snap-row">
+            <span class="sr-label">Status</span>
+            <span class="sr-val">
+              <span class="badge b-{{ drive.status }}">{{ drive.status|capitalize }}</span>
+            </span>
+          </div>
+          <div class="snap-row">
+            <span class="sr-label">Type</span>
+            <span class="sr-val">{{ drive.job_type.replace('_',' ')|capitalize }}</span>
+          </div>
+          <div class="snap-row">
+            <span class="sr-label">Location</span>
+            <span class="sr-val">{{ drive.location or '—' }}</span>
+          </div>
+          <div class="snap-row">
+            <span class="sr-label">Package</span>
+            <span class="sr-val">{{ drive.salary_package or '—' }}</span>
+          </div>
+          <div class="snap-row">
+            <span class="sr-label">Min CGPA</span>
+            <span class="sr-val">{{ drive.eligibility_cgpa }}</span>
+          </div>
+          <div class="snap-row">
+            <span class="sr-label">Deadline</span>
+            <span class="sr-val">{{ drive.application_deadline }}</span>
+          </div>
+          <div class="snap-row">
+            <span class="sr-label">Created</span>
+            <span class="sr-val" style="font-size:12px">
+              {{ drive.created_at.strftime('%Y-%m-%d') if drive.created_at else '—' }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Company Info -->
+      <div class="section-card">
+        <div class="sc-header">
+          <div class="sc-icon"><i class="bi bi-building"></i></div>
+          <h2>Company</h2>
+        </div>
+        <div class="sc-body" style="padding:1rem">
+          <div class="company-card">
+            <div class="co-logo">{{ drive.company_name[0]|upper }}</div>
+            <div>
+              <div style="font-weight:600;font-size:14px">{{ drive.company_name }}</div>
+              <a href="{{ url_for('admin.company_detail', company_id=drive.company_id) }}"
+                 style="font-size:13px;color:var(--blue);text-decoration:none">
+                View full profile <i class="bi bi-arrow-right" style="font-size:11px"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

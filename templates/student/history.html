@@ -1,0 +1,351 @@
+{% extends 'base.html' %}
+{% block title %}Placement History — PlacementPlus{% endblock %}
+
+{% block extra_css %}
+<style>
+  .page-hero {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 2.2rem 0 1.8rem;
+    margin-bottom: 2rem;
+  }
+  .page-hero h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.9rem; font-weight: 400;
+    color: var(--dark); margin-bottom: .3rem;
+  }
+  .page-hero p { color: var(--mid); font-size: 14px; }
+
+  /* stat cards row */
+  .stat-row { display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:2rem; }
+  .stat-card {
+    background:var(--white); border:1px solid var(--border);
+    border-radius:14px; padding:1.25rem 1.4rem;
+    display:flex; align-items:center; gap:1rem;
+    flex:1; min-width:140px;
+  }
+  .stat-icon {
+    width:50px; height:50px; border-radius:12px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:20px; flex-shrink:0;
+  }
+  .si-green  { background:#ECFDF5; color:var(--green); }
+  .si-purple { background:#F5F3FF; color:#7C3AED; }
+  .si-red    { background:#FEF2F2; color:var(--red); }
+  .si-amber  { background:#FFFBEB; color:var(--amber); }
+  .stat-val   { font-size:1.75rem; font-weight:600; color:var(--dark); line-height:1.1; }
+  .stat-label { font-size:11px; color:var(--light); text-transform:uppercase; letter-spacing:.05em; margin-top:2px; }
+
+  /* section heading */
+  .section-head {
+    font-size:.8rem; font-weight:500; text-transform:uppercase;
+    letter-spacing:.06em; color:var(--light);
+    margin-bottom:1rem;
+  }
+
+  /* TIMELINE */
+  .timeline { position:relative; padding-left:28px; }
+  .timeline::before {
+    content:'';
+    position:absolute; left:8px; top:6px; bottom:0;
+    width:2px; background:var(--border);
+    border-radius:1px;
+  }
+
+  .tl-item {
+    position:relative; margin-bottom:1.5rem;
+    animation:fadeUp .35s ease both;
+  }
+  .tl-item:nth-child(1){animation-delay:.04s;}
+  .tl-item:nth-child(2){animation-delay:.08s;}
+  .tl-item:nth-child(3){animation-delay:.12s;}
+  .tl-item:nth-child(4){animation-delay:.16s;}
+  .tl-item:nth-child(5){animation-delay:.20s;}
+
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(8px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+
+  /* timeline dot */
+  .tl-dot {
+    position:absolute;
+    left:-28px; top:14px;
+    width:18px; height:18px; border-radius:50%;
+    border:2px solid var(--border);
+    background:var(--white);
+    display:flex; align-items:center; justify-content:center;
+    font-size:9px;
+    z-index:1;
+  }
+  .tl-dot.selected    { background:var(--green);  border-color:var(--green);  color:#fff; }
+  .tl-dot.shortlisted { background:#7C3AED;        border-color:#7C3AED;       color:#fff; }
+  .tl-dot.rejected    { background:var(--red);     border-color:var(--red);    color:#fff; }
+  .tl-dot.applied     { background:var(--blue);    border-color:var(--blue);   color:#fff; }
+
+  /* timeline card */
+  .tl-card {
+    background:var(--white);
+    border:1px solid var(--border);
+    border-radius:12px; overflow:hidden;
+    transition:box-shadow .2s, transform .15s;
+  }
+  .tl-card:hover {
+    box-shadow:0 4px 18px rgba(0,0,0,.07);
+    transform:translateY(-1px);
+  }
+
+  /* accent stripe per outcome */
+  .tl-card.selected    { border-left:4px solid #6EE7B7; }
+  .tl-card.shortlisted { border-left:4px solid #C4B5FD; }
+  .tl-card.rejected    { border-left:4px solid #FCA5A5; }
+  .tl-card.applied     { border-left:4px solid #93C5FD; }
+
+  .tl-card-body {
+    padding:1rem 1.2rem;
+    display:flex; align-items:flex-start; gap:.9rem;
+  }
+  .co-logo {
+    width:38px; height:38px; border-radius:9px;
+    background:var(--blue-lt); color:var(--blue);
+    display:flex; align-items:center; justify-content:center;
+    font-weight:700; font-size:14px; flex-shrink:0;
+  }
+  .tl-title   { font-weight:600; font-size:14.5px; }
+  .tl-company { font-size:13px; color:var(--mid); margin-top:1px; }
+
+  /* meta chips */
+  .chip-row { display:flex; flex-wrap:wrap; gap:5px; margin-top:.55rem; }
+  .chip {
+    font-size:11.5px; color:var(--mid);
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:5px; padding:.2rem .55rem;
+    display:inline-flex; align-items:center; gap:3px;
+  }
+  .chip i { font-size:10px; color:var(--light); }
+
+  /* outcome ribbon */
+  .outcome-ribbon {
+    padding:.55rem 1.2rem;
+    border-top:1px solid var(--border);
+    display:flex; align-items:center; justify-content:space-between;
+    font-size:13px;
+  }
+  .outcome-ribbon.selected    { background:#ECFDF5; }
+  .outcome-ribbon.shortlisted { background:#F5F3FF; }
+  .outcome-ribbon.rejected    { background:#FEF2F2; }
+  .outcome-ribbon.applied     { background:#EFF6FF; }
+
+  .outcome-label { font-weight:500; display:flex; align-items:center; gap:6px; }
+  .outcome-label.selected    { color:#065F46; }
+  .outcome-label.shortlisted { color:#5B21B6; }
+  .outcome-label.rejected    { color:#991B1B; }
+  .outcome-label.applied     { color:#1E40AF; }
+
+  /* empty */
+  .empty-state { text-align:center; padding:5rem 2rem; }
+  .empty-icon {
+    width:72px; height:72px;
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:18px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:28px; color:var(--light);
+    margin:0 auto 1.25rem;
+  }
+  .empty-state h3 { font-size:1rem; font-weight:600; margin-bottom:.4rem; }
+  .empty-state p  { font-size:14px; color:var(--light); }
+
+  /* filter tabs */
+  .tab-row { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:1.5rem; }
+  .tab-pill {
+    display:inline-flex; align-items:center; gap:6px;
+    padding:.38rem .9rem; border-radius:20px;
+    font-size:13px; font-weight:500;
+    border:1px solid var(--border);
+    background:var(--white); color:var(--mid);
+    text-decoration:none; transition:all .15s; white-space:nowrap;
+  }
+  .tab-pill:hover { border-color:var(--blue); color:var(--blue); }
+  .tab-pill.active { background:var(--blue); border-color:var(--blue); color:#fff; }
+  .tab-pill .cnt {
+    background:rgba(255,255,255,.25); border-radius:10px;
+    padding:0 .45em; font-size:11px; font-weight:600;
+  }
+  .tab-pill:not(.active) .cnt { background:var(--surface); color:var(--light); }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<div class="page-hero">
+  <div class="container-fluid px-4">
+    <h1>Placement History</h1>
+    <p>Your complete recruitment journey across all drives</p>
+  </div>
+</div>
+
+<div class="container-fluid px-4">
+
+{% if history %}
+
+  <!-- STAT CARDS -->
+  <div class="stat-row">
+    <div class="stat-card">
+      <div class="stat-icon si-green"><i class="bi bi-trophy-fill"></i></div>
+      <div>
+        <div class="stat-val">{{ selected_count }}</div>
+        <div class="stat-label">Selected</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon si-purple"><i class="bi bi-list-check"></i></div>
+      <div>
+        <div class="stat-val">{{ shortlisted_count }}</div>
+        <div class="stat-label">Shortlisted</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon si-red"><i class="bi bi-x-circle"></i></div>
+      <div>
+        <div class="stat-val">{{ rejected_count }}</div>
+        <div class="stat-label">Rejected</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon si-amber"><i class="bi bi-clock-history"></i></div>
+      <div>
+        <div class="stat-val">{{ history|length }}</div>
+        <div class="stat-label">Total</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FILTER TABS -->
+  {% set cur = request.args.get('outcome','') %}
+  <div class="tab-row">
+    <a href="{{ url_for('student.history') }}"
+       class="tab-pill {% if cur=='' %}active{% endif %}">
+      All <span class="cnt">{{ history|length }}</span>
+    </a>
+    <a href="?outcome=selected"
+       class="tab-pill {% if cur=='selected' %}active{% endif %}">
+      Selected <span class="cnt">{{ selected_count }}</span>
+    </a>
+    <a href="?outcome=shortlisted"
+       class="tab-pill {% if cur=='shortlisted' %}active{% endif %}">
+      Shortlisted <span class="cnt">{{ shortlisted_count }}</span>
+    </a>
+    <a href="?outcome=rejected"
+       class="tab-pill {% if cur=='rejected' %}active{% endif %}">
+      Rejected <span class="cnt">{{ rejected_count }}</span>
+    </a>
+  </div>
+
+  {% set filtered = history if not cur
+                    else history|selectattr('status','equalto',cur)|list %}
+
+  {% if filtered %}
+
+  <div class="section-head">{{ filtered|length }} record{{ 's' if filtered|length != 1 }}</div>
+
+  <!-- TIMELINE -->
+  <div class="timeline">
+    {% for h in filtered %}
+    <div class="tl-item">
+
+      <!-- dot -->
+      <div class="tl-dot {{ h.status }}">
+        {% if h.status == 'selected' %}    <i class="bi bi-trophy-fill"></i>
+        {% elif h.status == 'shortlisted' %}<i class="bi bi-check"></i>
+        {% elif h.status == 'rejected' %}  <i class="bi bi-x"></i>
+        {% else %}                          <i class="bi bi-send"></i>
+        {% endif %}
+      </div>
+
+      <!-- card -->
+      <div class="tl-card {{ h.status }}">
+
+        <div class="tl-card-body">
+          <div class="co-logo">{{ h.company_name[0]|upper }}</div>
+
+          <div style="flex:1;min-width:0">
+            <div class="tl-title">{{ h.job_title }}</div>
+            <div class="tl-company">{{ h.company_name }}</div>
+
+            <div class="chip-row">
+              <span class="chip">
+                <i class="bi bi-briefcase"></i>
+                {{ h.job_type.replace('_',' ')|capitalize }}
+              </span>
+              {% if h.location %}
+              <span class="chip">
+                <i class="bi bi-geo-alt"></i>{{ h.location }}
+              </span>
+              {% endif %}
+              {% if h.salary_package %}
+              <span class="chip">
+                <i class="bi bi-currency-rupee"></i>{{ h.salary_package }}
+              </span>
+              {% endif %}
+              <span class="chip">
+                <i class="bi bi-calendar3"></i>
+                Applied: {{ h.applied_at.strftime('%Y-%m-%d') if h.applied_at else '—' }}
+              </span>
+            </div>
+          </div>
+
+          <!-- drive status pill -->
+          <div style="flex-shrink:0;text-align:right">
+            <span style="font-size:11px;color:var(--light)">
+              Drive {{ h.drive_status|capitalize }}
+            </span>
+          </div>
+        </div>
+
+        <!-- OUTCOME RIBBON -->
+        <div class="outcome-ribbon {{ h.status }}">
+          <div class="outcome-label {{ h.status }}">
+            {% if h.status == 'selected' %}
+              <i class="bi bi-trophy-fill"></i> Congratulations — you were selected!
+            {% elif h.status == 'shortlisted' %}
+              <i class="bi bi-list-check"></i> You were shortlisted for this role
+            {% elif h.status == 'rejected' %}
+              <i class="bi bi-x-circle"></i> Not selected for this role
+            {% else %}
+              <i class="bi bi-hourglass-split"></i> Drive closed — awaiting final status
+            {% endif %}
+          </div>
+          {% if h.salary_package and h.status == 'selected' %}
+          <span style="font-size:12px;color:var(--mid)">
+            <i class="bi bi-currency-rupee me-1"></i>{{ h.salary_package }}
+          </span>
+          {% endif %}
+        </div>
+
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon"><i class="bi bi-inbox"></i></div>
+    <h3>No {{ cur }} records</h3>
+    <p><a href="{{ url_for('student.history') }}" style="color:var(--blue)">View full history</a></p>
+  </div>
+  {% endif %}
+
+{% else %}
+  <!-- No history at all -->
+  <div class="empty-state">
+    <div class="empty-icon"><i class="bi bi-clock-history"></i></div>
+    <h3>No placement history yet</h3>
+    <p>
+      Completed drives and final outcomes will appear here.
+      <a href="{{ url_for('student.drives') }}" style="color:var(--blue)">Start applying</a>
+    </p>
+  </div>
+{% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,383 @@
+{% extends 'base.html' %}
+{% block title %}My Drives — PlacementPlus{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ── HERO ── */
+  .page-hero {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 2.2rem 0 1.8rem;
+    margin-bottom: 2rem;
+  }
+  .page-hero h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.9rem; font-weight: 400; margin-bottom: .3rem;
+  }
+  .page-hero p { color: var(--mid); font-size: 14px; }
+
+  /* ── SUMMARY STRIP ── */
+  .summary-strip {
+    display: flex; gap: 1rem; flex-wrap: wrap;
+    margin-bottom: 1.75rem;
+  }
+  .sum-pill {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 12px; padding: .85rem 1.1rem;
+    display: flex; align-items: center; gap: 10px;
+    flex: 1; min-width: 120px;
+  }
+  .sicon {
+    width: 36px; height: 36px; border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; flex-shrink: 0;
+  }
+  .si-blue   { background:#EFF6FF; color:var(--blue); }
+  .si-amber  { background:#FFFBEB; color:#F59E0B; }
+  .si-green  { background:#ECFDF5; color:#10B981; }
+  .si-gray   { background:var(--surface); color:var(--light); }
+  .si-red    { background:#FEF2F2; color:#EF4444; }
+  .slabel { font-size:11px; color:var(--light); text-transform:uppercase; letter-spacing:.05em; }
+  .sval   { font-size:1.25rem; font-weight:600; color:var(--dark); line-height:1.2; }
+
+  /* ── FILTER BAR ── */
+  .filter-bar {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 14px; padding: .85rem 1.25rem;
+    display: flex; align-items: center;
+    gap: 1rem; flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+  }
+  .fpill {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: .35rem .85rem; border-radius: 20px;
+    font-size: 13px; font-weight: 500;
+    border: 1px solid var(--border);
+    background: var(--white); color: var(--mid);
+    text-decoration: none; transition: all .15s; white-space: nowrap;
+  }
+  .fpill:hover { border-color: var(--blue); color: var(--blue); }
+  .fpill.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+
+  /* ── DRIVE CARDS ── */
+  .drive-card {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 16px; padding: 1.4rem;
+    display: flex; flex-direction: column; height: 100%;
+    transition: box-shadow .2s, transform .2s, border-color .2s;
+    animation: fadeUp .3s ease both;
+  }
+  .drive-card:hover {
+    box-shadow: 0 8px 28px rgba(37,99,235,.09);
+    transform: translateY(-2px);
+    border-color: #BFDBFE;
+  }
+  @keyframes fadeUp {
+    from { opacity:0; transform:translateY(10px); }
+    to   { opacity:1; transform:translateY(0); }
+  }
+  .drive-col:nth-child(1) .drive-card { animation-delay:.04s; }
+  .drive-col:nth-child(2) .drive-card { animation-delay:.08s; }
+  .drive-col:nth-child(3) .drive-card { animation-delay:.12s; }
+  .drive-col:nth-child(4) .drive-card { animation-delay:.16s; }
+  .drive-col:nth-child(5) .drive-card { animation-delay:.20s; }
+  .drive-col:nth-child(6) .drive-card { animation-delay:.24s; }
+
+  /* status stripe on left of card */
+  .drive-card.status-pending   { border-left: 3px solid #F59E0B; }
+  .drive-card.status-approved  { border-left: 3px solid #10B981; }
+  .drive-card.status-closed    { border-left: 3px solid #94A3B8; }
+  .drive-card.status-rejected  { border-left: 3px solid #EF4444; }
+
+  /* badges */
+  .badge { font-weight:500; font-size:11px; padding:.32em .7em; border-radius:6px; display:inline-block; }
+  .b-pending  { background:#FFFBEB; color:#92400E; border:1px solid #FDE68A; }
+  .b-approved { background:#ECFDF5; color:#065F46; border:1px solid #A7F3D0; }
+  .b-rejected { background:#FEF2F2; color:#991B1B; border:1px solid #FECACA; }
+  .b-closed   { background:#F1F5F9; color:#475569; border:1px solid #E2E8F0; }
+
+  /* tag chip */
+  .tag {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11.5px; color: var(--mid);
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 6px; padding: .2rem .55rem;
+  }
+  .tag i { font-size: 10px; color: var(--light); }
+
+  /* stat row on card */
+  .card-stats {
+    display: flex; gap: 0;
+    border: 1px solid var(--border); border-radius: 10px;
+    overflow: hidden; margin: 1rem 0;
+  }
+  .card-stat {
+    flex: 1; text-align: center;
+    padding: .6rem .5rem;
+    border-right: 1px solid var(--border);
+  }
+  .card-stat:last-child { border-right: none; }
+  .card-stat .cs-val { font-size: 1.1rem; font-weight: 600; color: var(--dark); }
+  .card-stat .cs-label { font-size: 10px; color: var(--light); text-transform: uppercase; letter-spacing:.04em; }
+
+  /* action buttons inside card */
+  .card-actions { display: flex; gap: 6px; flex-wrap: wrap; margin-top: auto; padding-top: 1rem; }
+  .card-actions form { margin: 0; }
+  .btn-card {
+    flex: 1; min-width: 70px;
+    display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+    font-size: 12px; font-weight: 500;
+    padding: .4rem .6rem; border-radius: 8px;
+    border: 1px solid var(--border); background: var(--white); color: var(--mid);
+    cursor: pointer; transition: all .15s; text-decoration: none;
+    white-space: nowrap;
+  }
+  .btn-card:hover        { border-color: var(--blue);  color: var(--blue);  background: var(--blue-lt); }
+  .btn-card.success:hover{ border-color: #10B981; color: #10B981; background: #ECFDF5; }
+  .btn-card.danger:hover { border-color: #EF4444; color: #EF4444; background: #FEF2F2; }
+  .btn-card.warn:hover   { border-color: #F59E0B; color: #F59E0B; background: #FFFBEB; }
+  .btn-card.primary {
+    background: var(--blue); border-color: var(--blue);
+    color: #fff;
+  }
+  .btn-card.primary:hover { background: var(--blue-dk); border-color: var(--blue-dk); color:#fff; }
+
+  /* deadline */
+  .deadline { font-size: 12px; color: var(--light); display: flex; align-items: center; gap: 4px; }
+
+  /* results meta */
+  .results-meta { font-size: 13px; color: var(--light); margin-bottom: 1rem; }
+
+  /* empty state */
+  .empty-state { text-align: center; padding: 5rem 2rem; }
+  .empty-icon {
+    width: 72px; height: 72px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 18px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px; color: var(--light);
+    margin: 0 auto 1.25rem;
+  }
+  .empty-state h3 { font-size: 1rem; font-weight: 600; margin-bottom: .4rem; }
+  .empty-state p  { font-size: 14px; color: var(--light); }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- HERO -->
+<div class="page-hero">
+  <div class="container-fluid px-4">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+      <div>
+        <h1>My Placement Drives</h1>
+        <p>Create and manage all drives posted by your company</p>
+      </div>
+      <a href="{{ url_for('company.create_drive') }}" class="btn btn-primary"
+         style="display:flex;align-items:center;gap:6px">
+        <i class="bi bi-plus-lg"></i> New Drive
+      </a>
+    </div>
+  </div>
+</div>
+
+<div class="container-fluid px-4">
+
+  <!-- SUMMARY STRIP -->
+  {% set n_pending  = drives|selectattr('status','equalto','pending') |list|length %}
+  {% set n_approved = drives|selectattr('status','equalto','approved')|list|length %}
+  {% set n_closed   = drives|selectattr('status','equalto','closed')  |list|length %}
+  {% set n_rejected = drives|selectattr('status','equalto','rejected')|list|length %}
+  {% set total_apps = drives|sum(attribute='applicant_count') %}
+
+  <div class="summary-strip">
+    <div class="sum-pill">
+      <div class="sicon si-blue"><i class="bi bi-briefcase"></i></div>
+      <div><div class="slabel">Total Drives</div><div class="sval">{{ drives|length }}</div></div>
+    </div>
+    <div class="sum-pill">
+      <div class="sicon si-amber"><i class="bi bi-hourglass-split"></i></div>
+      <div><div class="slabel">Pending</div><div class="sval">{{ n_pending }}</div></div>
+    </div>
+    <div class="sum-pill">
+      <div class="sicon si-green"><i class="bi bi-check-circle"></i></div>
+      <div><div class="slabel">Approved</div><div class="sval">{{ n_approved }}</div></div>
+    </div>
+    <div class="sum-pill">
+      <div class="sicon si-gray"><i class="bi bi-lock"></i></div>
+      <div><div class="slabel">Closed</div><div class="sval">{{ n_closed }}</div></div>
+    </div>
+    <div class="sum-pill">
+      <div class="sicon si-blue"><i class="bi bi-people"></i></div>
+      <div><div class="slabel">Total Applicants</div><div class="sval">{{ total_apps }}</div></div>
+    </div>
+  </div>
+
+  <!-- FILTER PILLS -->
+  {% set active_filter = request.args.get('status','') %}
+  <div class="filter-bar">
+    <span style="font-size:13px;color:var(--mid);font-weight:500">Filter:</span>
+    <div class="d-flex gap-2 flex-wrap">
+      <a href="{{ url_for('company.drives') }}"
+         class="fpill {% if not active_filter %}active{% endif %}">
+        All <span style="font-size:11px;color:inherit;opacity:.7">({{ drives|length }})</span>
+      </a>
+      {% for s, label, icon in [
+          ('pending',  'Pending',  'bi-hourglass-split'),
+          ('approved', 'Approved', 'bi-check-circle'),
+          ('closed',   'Closed',   'bi-lock'),
+          ('rejected', 'Rejected', 'bi-x-circle')
+      ] %}
+      <a href="?status={{ s }}"
+         class="fpill {% if active_filter == s %}active{% endif %}">
+        <i class="bi {{ icon }}"></i> {{ label }}
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- DISPLAY LIST -->
+  {% if active_filter %}
+    {% set display = drives | selectattr('status','equalto', active_filter) | list %}
+  {% else %}
+    {% set display = drives %}
+  {% endif %}
+
+  <div class="results-meta">
+    Showing <strong>{{ display|length }}</strong>
+    drive{{ 's' if display|length != 1 }}
+    {% if active_filter %} · {{ active_filter|capitalize }}{% endif %}
+  </div>
+
+  <!-- DRIVE GRID -->
+  {% if display %}
+  <div class="row g-3">
+    {% for d in display %}
+    <div class="col-md-6 col-xl-4 drive-col">
+      <div class="drive-card status-{{ d.status }}">
+
+        <!-- Header -->
+        <div class="d-flex align-items-start justify-content-between gap-2 mb-2">
+          <div style="min-width:0">
+            <div style="font-weight:600;font-size:15px;line-height:1.3;
+                        overflow:hidden;display:-webkit-box;
+                        -webkit-line-clamp:2;-webkit-box-orient:vertical;">
+              {{ d.job_title }}
+            </div>
+          </div>
+          <span class="badge b-{{ d.status }}" style="flex-shrink:0">
+            {% if d.status == 'pending' %}<i class="bi bi-hourglass-split me-1"></i>
+            {% elif d.status == 'approved' %}<i class="bi bi-check me-1"></i>
+            {% elif d.status == 'closed' %}<i class="bi bi-lock me-1"></i>
+            {% else %}<i class="bi bi-x me-1"></i>{% endif %}
+            {{ d.status|capitalize }}
+          </span>
+        </div>
+
+        <!-- Tags -->
+        <div class="d-flex flex-wrap gap-1 mb-2">
+          <span class="tag"><i class="bi bi-briefcase"></i>{{ d.job_type.replace('_',' ')|capitalize }}</span>
+          {% if d.location %}<span class="tag"><i class="bi bi-geo-alt"></i>{{ d.location }}</span>{% endif %}
+          {% if d.salary_package %}<span class="tag"><i class="bi bi-currency-rupee"></i>{{ d.salary_package }}</span>{% endif %}
+        </div>
+
+        <!-- Eligibility line -->
+        <div style="font-size:12px;color:var(--mid);margin-bottom:.5rem">
+          <i class="bi bi-mortarboard me-1" style="color:var(--light)"></i>
+          CGPA ≥ {{ d.eligibility_cgpa }}
+          {% if d.eligible_branches %}
+          &nbsp;·&nbsp; {{ d.eligible_branches }}
+          {% endif %}
+        </div>
+
+        <!-- Stats row -->
+        <div class="card-stats">
+          <div class="card-stat">
+            <div class="cs-val">{{ d.applicant_count }}</div>
+            <div class="cs-label">Applied</div>
+          </div>
+          <div class="card-stat">
+            <div class="cs-val">{{ d.shortlisted_count }}</div>
+            <div class="cs-label">Shortlisted</div>
+          </div>
+          <div class="card-stat">
+            <div class="cs-val">{{ d.selected_count }}</div>
+            <div class="cs-label">Selected</div>
+          </div>
+        </div>
+
+        <!-- Deadline -->
+        <div class="deadline mb-1">
+          <i class="bi bi-calendar3" style="font-size:11px"></i>
+          Deadline: {{ d.application_deadline }}
+        </div>
+
+        <!-- Pending notice -->
+        {% if d.status == 'pending' %}
+        <div style="font-size:12px;color:#92400E;background:#FFFBEB;
+                    border:1px solid #FDE68A;border-radius:7px;
+                    padding:.4rem .7rem;margin-bottom:.5rem">
+          <i class="bi bi-info-circle me-1"></i>
+          Awaiting admin approval before students can apply.
+        </div>
+        {% endif %}
+
+        <!-- Actions -->
+        <div class="card-actions">
+          <!-- View applicants always visible -->
+          <a href="{{ url_for('company.drive_applications', drive_id=d.id) }}"
+             class="btn-card primary">
+            <i class="bi bi-people"></i>
+            Applicants ({{ d.applicant_count }})
+          </a>
+
+          {% if d.status not in ['closed', 'rejected'] %}
+          <a href="{{ url_for('company.edit_drive', drive_id=d.id) }}"
+             class="btn-card">
+            <i class="bi bi-pencil"></i> Edit
+          </a>
+          {% endif %}
+
+          {% if d.status == 'approved' %}
+          <form method="POST"
+                action="{{ url_for('company.close_drive', drive_id=d.id) }}"
+                onsubmit="return confirm('Close this drive? Students will no longer be able to apply.')">
+            <button type="submit" class="btn-card warn">
+              <i class="bi bi-lock"></i> Close
+            </button>
+          </form>
+          {% endif %}
+
+          {% if d.status in ['pending', 'rejected'] %}
+          <form method="POST"
+                action="{{ url_for('company.delete_drive', drive_id=d.id) }}"
+                onsubmit="return confirm('Permanently delete this drive?')">
+            <button type="submit" class="btn-card danger">
+              <i class="bi bi-trash3"></i>
+            </button>
+          </form>
+          {% endif %}
+        </div>
+
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon"><i class="bi bi-briefcase"></i></div>
+    <h3>No drives{% if active_filter %} with status "{{ active_filter }}"{% endif %}</h3>
+    <p>
+      {% if active_filter %}
+        <a href="{{ url_for('company.drives') }}" style="color:var(--blue)">View all drives</a>
+      {% else %}
+        You haven't created any drives yet.
+        <a href="{{ url_for('company.create_drive') }}" style="color:var(--blue)">Create your first drive</a>
+      {% endif %}
+    </p>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

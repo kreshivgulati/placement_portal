@@ -1,0 +1,465 @@
+{% extends 'base.html' %}
+{% block title %}Edit Drive — PlacementPlus{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ── HERO ── */
+  .page-hero {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 2rem 0 1.6rem;
+    margin-bottom: 2rem;
+  }
+  .page-hero h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.75rem; font-weight: 400; margin-bottom: .25rem;
+  }
+  .page-hero p { color: var(--mid); font-size: 14px; }
+
+  /* ── LAYOUT ── */
+  .form-layout {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 1.5rem;
+    align-items: start;
+  }
+  @media(max-width:900px) {
+    .form-layout { grid-template-columns: 1fr; }
+    .sidebar-col { order: -1; }
+  }
+
+  /* ── SECTION CARD ── */
+  .section-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 14px; overflow: hidden;
+    margin-bottom: 1.25rem;
+  }
+  .sc-header {
+    padding: .9rem 1.4rem;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .sc-header h2 {
+    font-size: 13px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .05em;
+    color: var(--mid); margin: 0; flex: 1;
+  }
+  .sc-icon {
+    width: 28px; height: 28px; border-radius: 7px;
+    background: var(--blue-lt); color: var(--blue);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; flex-shrink: 0;
+  }
+  .sc-body { padding: 1.4rem; }
+
+  /* ── FORM ELEMENTS ── */
+  .form-group { margin-bottom: 1.1rem; }
+  .form-label {
+    display: block; font-size: 13px; font-weight: 500;
+    color: var(--mid); margin-bottom: .35rem;
+  }
+  .form-label .req { color: #EF4444; margin-left: 2px; }
+  .form-control, .form-select {
+    width: 100%; border: 1px solid var(--border);
+    border-radius: 8px; font-size: 14px;
+    padding: .5rem .85rem;
+    color: var(--dark); background: var(--white);
+    transition: border-color .15s, box-shadow .15s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .form-control:focus, .form-select:focus {
+    outline: none; border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+  }
+  .form-control::placeholder { color: var(--light); }
+  textarea.form-control { resize: vertical; min-height: 120px; line-height: 1.6; }
+  .form-hint { font-size: 12px; color: var(--light); margin-top: .3rem; }
+
+  .field-row-2 { display: grid; gap: 1rem; grid-template-columns: 1fr 1fr; }
+  @media(max-width:600px) { .field-row-2 { grid-template-columns: 1fr; } }
+
+  /* ── JOB TYPE SELECTOR ── */
+  .type-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: .75rem; }
+  .type-option { position: relative; }
+  .type-option input[type=radio] {
+    position: absolute; opacity: 0; width: 100%; height: 100%;
+    cursor: pointer; margin: 0; z-index: 1;
+  }
+  .type-label {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 6px; padding: .85rem .5rem;
+    border: 1.5px solid var(--border); border-radius: 10px;
+    cursor: pointer; transition: all .15s; text-align: center;
+  }
+  .type-label .tl-icon { font-size: 20px; color: var(--light); transition: color .15s; }
+  .type-label .tl-name { font-size: 13px; font-weight: 500; color: var(--mid); transition: color .15s; }
+  .type-option input:checked + .type-label { border-color: var(--blue); background: var(--blue-lt); }
+  .type-option input:checked + .type-label .tl-icon,
+  .type-option input:checked + .type-label .tl-name { color: var(--blue); }
+
+  /* ── CGPA SLIDER ── */
+  .cgpa-wrap { display: flex; align-items: center; gap: 1rem; }
+  .cgpa-wrap input[type=range] { flex: 1; accent-color: var(--blue); cursor: pointer; }
+  .cgpa-display {
+    min-width: 48px; height: 36px;
+    background: var(--blue-lt); color: var(--blue);
+    border-radius: 8px; border: 1px solid #BFDBFE;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 600; flex-shrink: 0;
+  }
+
+  /* ── CHECKBOX GRID ── */
+  .multi-select-wrap {
+    border: 1px solid var(--border); border-radius: 8px;
+    overflow: hidden; background: var(--white);
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .multi-select-wrap:focus-within {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+  }
+  .checkbox-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(90px,1fr));
+  }
+  .check-item {
+    display: flex; align-items: center; gap: 7px;
+    padding: .55rem .75rem;
+    border-bottom: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    font-size: 13px; color: var(--dark);
+    cursor: pointer; transition: background .12s; user-select: none;
+  }
+  .check-item:hover { background: var(--blue-lt); }
+  .check-item input[type=checkbox] { accent-color: var(--blue); width:14px; height:14px; cursor:pointer; }
+  .check-item input[type=checkbox]:checked + span { color: var(--blue); font-weight: 500; }
+
+  /* ── WARNING BANNER ── */
+  .warn-banner {
+    background: #FFFBEB; border: 1px solid #FDE68A;
+    border-radius: 10px; padding: .85rem 1.1rem;
+    display: flex; align-items: flex-start; gap: 10px;
+    font-size: 13px; color: #92400E; margin-bottom: 1.25rem;
+  }
+  .warn-banner i { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
+
+  /* ── CURRENT STATUS BADGE ── */
+  .badge { font-weight:500; font-size:11px; padding:.35em .75em; border-radius:6px; display:inline-flex; align-items:center; gap:4px; }
+  .b-pending  { background:#FFFBEB; color:#92400E; border:1px solid #FDE68A; }
+  .b-approved { background:#ECFDF5; color:#065F46; border:1px solid #A7F3D0; }
+  .b-rejected { background:#FEF2F2; color:#991B1B; border:1px solid #FECACA; }
+  .b-closed   { background:#F1F5F9; color:#475569; border:1px solid #E2E8F0; }
+
+  /* ── ACTION ROW ── */
+  .action-row {
+    display: flex; gap: 10px; align-items: center;
+    padding: 1.1rem 1.4rem;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .btn-save {
+    background: var(--blue); color: #fff;
+    border: none; border-radius: 9px;
+    padding: .55rem 1.4rem; font-size: 14px; font-weight: 500;
+    cursor: pointer; transition: background .15s;
+    font-family: 'DM Sans', sans-serif;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-save:hover { background: var(--blue-dk); }
+  .btn-cancel {
+    background: var(--white); color: var(--mid);
+    border: 1px solid var(--border); border-radius: 9px;
+    padding: .55rem 1.1rem; font-size: 14px; font-weight: 500;
+    text-decoration: none; transition: all .15s;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-cancel:hover { border-color: var(--mid); color: var(--dark); }
+
+  /* sidebar info note */
+  .info-note {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1rem 1.1rem;
+    font-size: 13px; color: var(--mid); line-height: 1.6;
+    margin-bottom: 1rem;
+  }
+  .info-note strong { color: var(--dark); }
+  .info-note i { color: var(--blue); margin-right: 5px; }
+
+  /* current drive info sidebar */
+  .drive-snapshot {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1rem; margin-bottom: 1rem;
+  }
+  .ds-row {
+    display: flex; justify-content: space-between;
+    font-size: 13px; padding: .35rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .ds-row:last-child { border-bottom: none; }
+  .ds-row .ds-label { color: var(--light); }
+  .ds-row .ds-val   { font-weight: 500; color: var(--dark); text-align: right; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- HERO -->
+<div class="page-hero">
+  <div class="container-fluid px-4">
+    <a href="{{ url_for('company.drives') }}"
+       style="font-size:13px;color:var(--mid);text-decoration:none;
+              display:inline-flex;align-items:center;gap:5px;margin-bottom:.75rem">
+      <i class="bi bi-arrow-left"></i> Back to Drives
+    </a>
+    <h1>Edit Placement Drive</h1>
+    <p>Update the details for <strong>{{ drive.job_role}}</strong></p>
+  </div>
+</div>
+
+<div class="container-fluid px-4 pb-4">
+
+  <!-- RE-APPROVAL WARNING -->
+  <div class="warn-banner">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    <div>
+      <strong>Saving will reset this drive to Pending.</strong>
+      Any changes you make will require admin re-approval before students can see or apply to the drive again.
+    </div>
+  </div>
+
+  <form method="POST" action="{{ url_for('company.edit_drive', drive_id=drive.id) }}">
+    <div class="form-layout">
+
+      <!-- ── LEFT: FORM ── -->
+      <div>
+
+        <!-- Job Details -->
+        <div class="section-card">
+          <div class="sc-header">
+            <div class="sc-icon"><i class="bi bi-briefcase"></i></div>
+            <h2>Job Details</h2>
+          </div>
+          <div class="sc-body">
+
+            <div class="form-group">
+              <label class="form-label">Job Title <span class="req">*</span></label>
+              <input type="text" name="job_role" class="form-control"
+                     value="{{ drive.job_role }}" required
+                     placeholder="e.g. Software Engineer"/>
+            </div>
+
+            <!-- Job type cards -->
+            <div class="form-group">
+              <label class="form-label">Job Type <span class="req">*</span></label>
+              <div class="type-grid">
+                {% for val, label, icon in [
+                    ('full_time','Full Time','bi-building'),
+                    ('internship','Internship','bi-laptop'),
+                    ('contract','Contract','bi-file-earmark-text')
+                ] %}
+                <div class="type-option">
+                  <input type="radio" name="job_type" value="{{ val }}"
+                         id="jt_{{ val }}"
+                         {% if drive.job_type == val %}checked{% endif %} required/>
+                  <label class="type-label" for="jt_{{ val }}">
+                    <span class="tl-icon"><i class="bi {{ icon }}"></i></span>
+                    <span class="tl-name">{{ label }}</span>
+                  </label>
+                </div>
+                {% endfor %}
+              </div>
+            </div>
+
+            <div class="field-row-2">
+              <div class="form-group">
+                <label class="form-label">Location</label>
+                <div style="position:relative">
+                  <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);
+                               color:var(--light);font-size:13px">
+                    <i class="bi bi-geo-alt"></i>
+                  </span>
+                  <input type="text" name="location" class="form-control"
+                         style="padding-left:2.1rem"
+                         value="{{ drive.location or '' }}"
+                         placeholder="e.g. Bangalore / Remote"/>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Salary / Stipend</label>
+                <div style="position:relative">
+                  <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);
+                               color:var(--light);font-size:13px">
+                    <i class="bi bi-currency-rupee"></i>
+                  </span>
+                  <input type="text" name="salary_package" class="form-control"
+                         style="padding-left:2.1rem"
+                         value="{{ drive.salary_package or '' }}"
+                         placeholder="e.g. ₹12 LPA"/>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Job Description <span class="req">*</span></label>
+              <textarea name="job_description" class="form-control"
+                        rows="5" required>{{ drive.job_description }}</textarea>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Eligibility -->
+        <div class="section-card">
+          <div class="sc-header">
+            <div class="sc-icon"><i class="bi bi-mortarboard"></i></div>
+            <h2>Eligibility Criteria</h2>
+          </div>
+          <div class="sc-body">
+
+            <!-- CGPA slider -->
+            <div class="form-group">
+              <label class="form-label">Minimum CGPA</label>
+              <div class="cgpa-wrap">
+                <input type="range" name="eligibility_cgpa" id="cgpaRange"
+                       min="0" max="10" step="0.1"
+                       value="{{ drive.eligibility_cgpa }}"
+                       oninput="document.getElementById('cgpaVal').textContent=parseFloat(this.value).toFixed(1)"/>
+                <div class="cgpa-display" id="cgpaVal">
+                  {{ "%.1f"|format(drive.eligibility_cgpa) }}
+                </div>
+              </div>
+              <div class="form-hint">Set to 0.0 for no minimum requirement.</div>
+            </div>
+
+            <!-- Branches -->
+            <div class="form-group">
+              <label class="form-label">Eligible Branches</label>
+              {% set sel_branches = drive.eligible_branches.split(',') if drive.eligible_branches else [] %}
+              <div class="multi-select-wrap">
+                <div class="checkbox-grid">
+                  {% for b in ['CSE','ECE','IT','ME','CE','EE','Civil','Other'] %}
+                  <label class="check-item">
+                    <input type="checkbox" name="eligible_branches" value="{{ b }}"
+                           {% if b in sel_branches %}checked{% endif %}/>
+                    <span>{{ b }}</span>
+                  </label>
+                  {% endfor %}
+                </div>
+              </div>
+              <div class="form-hint">Leave all unchecked to allow all branches.</div>
+            </div>
+
+            <!-- Years -->
+            <div class="form-group">
+              <label class="form-label">Eligible Years</label>
+              {% set sel_years = drive.eligible_years.split(',') if drive.eligible_years else [] %}
+              <div class="multi-select-wrap">
+                <div class="checkbox-grid" style="grid-template-columns:repeat(4,1fr)">
+                  {% for y, label in [('1','1st'),('2','2nd'),('3','3rd'),('4','4th')] %}
+                  <label class="check-item">
+                    <input type="checkbox" name="eligible_years" value="{{ y }}"
+                           {% if y in sel_years %}checked{% endif %}/>
+                    <span>{{ label }} Year</span>
+                  </label>
+                  {% endfor %}
+                </div>
+              </div>
+              <div class="form-hint">Leave all unchecked to allow all years.</div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Timeline -->
+        <div class="section-card">
+          <div class="sc-header">
+            <div class="sc-icon"><i class="bi bi-calendar3"></i></div>
+            <h2>Timeline</h2>
+          </div>
+          <div class="sc-body">
+            <div class="form-group" style="max-width:280px">
+              <label class="form-label">Application Deadline <span class="req">*</span></label>
+              <input type="date" name="application_deadline" class="form-control"
+                     value="{{ drive.application_deadline }}" required/>
+              <div class="form-hint">Students cannot apply after this date.</div>
+            </div>
+          </div>
+
+          <div class="action-row">
+            <button type="submit" class="btn-save">
+              <i class="bi bi-arrow-clockwise"></i> Save &amp; Resubmit
+            </button>
+            <a href="{{ url_for('company.drives') }}" class="btn-cancel">
+              Cancel
+            </a>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ── RIGHT: SIDEBAR ── -->
+      <div class="sidebar-col">
+
+        <!-- Current drive snapshot -->
+        <div class="section-card" style="margin-bottom:1rem">
+          <div class="sc-header">
+            <div class="sc-icon"><i class="bi bi-info-circle"></i></div>
+            <h2>Current Drive Info</h2>
+          </div>
+          <div class="sc-body" style="padding:1rem">
+            <div class="drive-snapshot">
+              <div class="ds-row">
+                <span class="ds-label">Status</span>
+                <span class="ds-val">
+                  <span class="badge b-{{ drive.status }}">{{ drive.status|capitalize }}</span>
+                </span>
+              </div>
+              <div class="ds-row">
+                <span class="ds-label">Created</span>
+                <span class="ds-val">{{ drive.created_at.strftime('%Y-%m-%d') if drive.created_at else '—' }}
+</span>
+              </div>
+              <div class="ds-row">
+                <span class="ds-label">Deadline</span>
+                <span class="ds-val">{{ drive.application_deadline }}</span>
+              </div>
+              <div class="ds-row">
+                <span class="ds-label">Min CGPA</span>
+                <span class="ds-val">{{ drive.eligibility_cgpa }}</span>
+              </div>
+              <div class="ds-row">
+                <span class="ds-label">Branches</span>
+                <span class="ds-val" style="font-size:12px">
+                  {{ drive.eligible_branches or 'All' }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- What happens note -->
+        <div class="info-note" style="border-color:#FDE68A;background:#FFFBEB;color:#92400E">
+          <i class="bi bi-exclamation-triangle" style="color:#F59E0B"></i>
+          <strong style="color:#92400E">After saving:</strong>
+          <ul style="margin:.5rem 0 0;padding-left:1.1rem;line-height:1.8">
+            <li>Drive reverts to <strong>Pending</strong></li>
+            <li>Students cannot apply until re-approved</li>
+            <li>Existing applications are preserved</li>
+          </ul>
+        </div>
+
+        <div class="info-note">
+          <i class="bi bi-lightbulb"></i>
+          <strong>Good to know</strong>
+          <ul style="margin:.5rem 0 0;padding-left:1.1rem;line-height:1.8">
+            <li>You can close the drive any time after approval</li>
+            <li>Pending and rejected drives can be deleted</li>
+            <li>Approved drives cannot be deleted — close them first</li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}

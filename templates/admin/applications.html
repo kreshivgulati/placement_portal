@@ -1,0 +1,371 @@
+{% extends 'base.html' %}
+{% block title %}All Applications — Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ── HERO ── */
+  .page-hero {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 2.2rem 0 1.8rem;
+    margin-bottom: 2rem;
+  }
+  .page-hero h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.9rem; font-weight: 400; margin-bottom: .3rem;
+  }
+  .page-hero p { color: var(--mid); font-size: 14px; }
+
+  /* ── SUMMARY STRIP ── */
+  .summary-strip {
+    display: flex; gap: 1rem; flex-wrap: wrap;
+    margin-bottom: 1.75rem;
+  }
+  .sum-pill {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 12px; padding: .85rem 1.1rem;
+    display: flex; align-items: center; gap: 10px;
+    flex: 1; min-width: 120px;
+  }
+  .sicon {
+    width: 36px; height: 36px; border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; flex-shrink: 0;
+  }
+  .si-blue   { background:#EFF6FF; color:var(--blue); }
+  .si-purple { background:#F5F3FF; color:#7C3AED; }
+  .si-green  { background:#ECFDF5; color:#10B981; }
+  .si-red    { background:#FEF2F2; color:#EF4444; }
+  .si-amber  { background:#FFFBEB; color:#F59E0B; }
+  .slabel { font-size:11px; color:var(--light); text-transform:uppercase; letter-spacing:.05em; }
+  .sval   { font-size:1.25rem; font-weight:600; color:var(--dark); line-height:1.2; }
+
+  /* ── FILTER BAR ── */
+  .filter-bar {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 14px; padding: 1rem 1.25rem;
+    display: flex; align-items: center;
+    gap: 1rem; flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+  }
+  .search-box { flex:1; min-width:220px; position:relative; }
+  .search-box .bi-search {
+    position:absolute; left:12px; top:50%;
+    transform:translateY(-50%);
+    color:var(--light); font-size:14px; pointer-events:none;
+  }
+  .search-box input {
+    padding-left:2.2rem; border:1px solid var(--border);
+    border-radius:8px; font-size:14px;
+    height:38px; width:100%;
+    background:var(--surface); color:var(--dark);
+    transition:border-color .15s, box-shadow .15s;
+  }
+  .search-box input:focus {
+    outline:none; border-color:var(--blue);
+    box-shadow:0 0 0 3px rgba(37,99,235,.1);
+    background:var(--white);
+  }
+  .fpill {
+    display:inline-flex; align-items:center; gap:5px;
+    padding:.35rem .85rem; border-radius:20px;
+    font-size:13px; font-weight:500;
+    border:1px solid var(--border);
+    background:var(--white); color:var(--mid);
+    text-decoration:none; transition:all .15s; white-space:nowrap;
+  }
+  .fpill:hover { border-color:var(--blue); color:var(--blue); }
+  .fpill.active { background:var(--blue); border-color:var(--blue); color:#fff; }
+
+  /* ── TABLE CARD ── */
+  .table-card {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 14px; overflow: hidden;
+  }
+  .table-card .table { margin:0; font-size:14px; border-collapse:collapse; }
+  .table-card .table thead th {
+    background:var(--surface); color:var(--light);
+    font-weight:500; font-size:11px;
+    text-transform:uppercase; letter-spacing:.06em;
+    border-bottom:1px solid var(--border);
+    padding:.8rem 1.1rem;
+  }
+  .table-card .table tbody td {
+    padding:.85rem 1.1rem;
+    border-bottom:1px solid var(--border);
+    vertical-align:middle;
+  }
+  .table-card .table tbody tr:last-child td { border-bottom:none; }
+  .table-card .table tbody tr {
+    transition:background .12s;
+    animation:fadeIn .25s ease both;
+  }
+  .table-card .table tbody tr:hover { background:var(--surface); }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+  /* student avatar */
+  .stu-avatar {
+    width:32px; height:32px; border-radius:50%;
+    background:var(--blue-lt); color:var(--blue);
+    display:flex; align-items:center; justify-content:center;
+    font-weight:700; font-size:12px; flex-shrink:0;
+  }
+
+  /* company logo */
+  .co-logo {
+    width:28px; height:28px; border-radius:7px;
+    background:var(--blue-lt); color:var(--blue);
+    display:flex; align-items:center; justify-content:center;
+    font-weight:700; font-size:11px; flex-shrink:0;
+  }
+
+  /* badges */
+  .badge { font-weight:500; font-size:11px; padding:.32em .68em; border-radius:6px; display:inline-block; }
+  .b-applied     { background:#EFF6FF; color:#1E40AF; border:1px solid #BFDBFE; }
+  .b-shortlisted { background:#F5F3FF; color:#5B21B6; border:1px solid #DDD6FE; }
+  .b-selected    { background:#ECFDF5; color:#065F46; border:1px solid #A7F3D0; }
+  .b-rejected    { background:#FEF2F2; color:#991B1B; border:1px solid #FECACA; }
+
+  /* CGPA chip */
+  .cgpa-chip {
+    display:inline-flex; align-items:center;
+    font-size:12px; font-weight:600; color:var(--blue);
+    background:var(--blue-lt); border-radius:5px;
+    padding:.15rem .45rem;
+  }
+
+  /* timeline dot for applied date */
+  .date-chip {
+    font-size:12px; color:var(--light);
+    display:flex; align-items:center; gap:4px;
+  }
+
+  /* results meta */
+  .results-meta { font-size:13px; color:var(--light); margin-bottom:1rem; }
+
+  /* empty state */
+  .empty-state { text-align:center; padding:5rem 2rem; }
+  .empty-icon {
+    width:72px; height:72px;
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:18px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:28px; color:var(--light);
+    margin:0 auto 1.25rem;
+  }
+  .empty-state h3 { font-size:1rem; font-weight:600; margin-bottom:.4rem; }
+  .empty-state p  { font-size:14px; color:var(--light); }
+
+  /* row highlight for selected applications */
+  tr.row-selected { border-left: 3px solid #10B981; }
+  tr.row-shortlisted { border-left: 3px solid #7C3AED; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- HERO -->
+<div class="page-hero">
+  <div class="container-fluid px-4">
+    <h1>All Applications</h1>
+    <p>Complete history of every placement application across all drives</p>
+  </div>
+</div>
+
+<div class="container-fluid px-4">
+
+  <!-- SUMMARY STRIP -->
+  {% set total       = applications|length %}
+  {% set n_applied     = applications|selectattr('status','equalto','applied')    |list|length %}
+  {% set n_short       = applications|selectattr('status','equalto','shortlisted')|list|length %}
+  {% set n_selected    = applications|selectattr('status','equalto','selected')   |list|length %}
+  {% set n_rejected    = applications|selectattr('status','equalto','rejected')   |list|length %}
+
+  <div class="summary-strip">
+    <div class="sum-pill">
+      <div class="sicon si-blue"><i class="bi bi-file-earmark-text"></i></div>
+      <div><div class="slabel">Total</div><div class="sval">{{ total }}</div></div>
+    </div>
+    <div class="sum-pill">
+      <div class="sicon si-amber"><i class="bi bi-send"></i></div>
+      <div><div class="slabel">Applied</div><div class="sval">{{ n_applied }}</div></div>
+    </div>
+    <div class="sum-pill">
+      <div class="sicon si-purple"><i class="bi bi-list-check"></i></div>
+      <div><div class="slabel">Shortlisted</div><div class="sval">{{ n_short }}</div></div>
+    </div>
+    <div class="sum-pill">
+      <div class="sicon si-green"><i class="bi bi-trophy"></i></div>
+      <div><div class="slabel">Selected</div><div class="sval">{{ n_selected }}</div></div>
+    </div>
+    <div class="sum-pill">
+      <div class="sicon si-red"><i class="bi bi-x-circle"></i></div>
+      <div><div class="slabel">Rejected</div><div class="sval">{{ n_rejected }}</div></div>
+    </div>
+  </div>
+
+  <!-- FILTER + SEARCH BAR -->
+  <form method="GET" action="{{ url_for('admin.applications') }}">
+    <div class="filter-bar">
+      <div class="search-box">
+        <i class="bi bi-search"></i>
+        <input type="text" name="search"
+               value="{{ request.args.get('search','') }}"
+               placeholder="Search by student name, ID or drive title…"/>
+      </div>
+
+      <div class="d-flex gap-2 flex-wrap">
+        <a href="{{ url_for('admin.applications') }}"
+           class="fpill {% if not selected_status %}active{% endif %}">
+          All
+        </a>
+        {% for s, label, icon in [
+            ('applied',     'Applied',     'bi-send'),
+            ('shortlisted', 'Shortlisted', 'bi-list-check'),
+            ('selected',    'Selected',    'bi-trophy'),
+            ('rejected',    'Rejected',    'bi-x-circle')
+        ] %}
+        <a href="?status={{ s }}{% if request.args.get('search') %}&search={{ request.args.get('search') }}{% endif %}"
+           class="fpill {% if selected_status == s %}active{% endif %}">
+          <i class="bi {{ icon }}"></i> {{ label }}
+        </a>
+        {% endfor %}
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-sm" style="height:38px;padding:0 1rem">
+        Search
+      </button>
+      {% if request.args.get('search') or selected_status %}
+      <a href="{{ url_for('admin.applications') }}"
+         class="btn btn-outline-secondary btn-sm" style="height:38px;padding:0 .9rem">
+        <i class="bi bi-x"></i> Clear
+      </a>
+      {% endif %}
+    </div>
+  </form>
+
+  <!-- RESULTS META -->
+  <div class="results-meta">
+    Showing <strong>{{ applications|length }}</strong>
+    application{{ 's' if applications|length != 1 }}
+    {% if selected_status %} · {{ selected_status|capitalize }}{% endif %}
+    {% if request.args.get('search') %} matching "<strong>{{ request.args.get('search') }}</strong>"{% endif %}
+  </div>
+
+  <!-- TABLE -->
+  {% if applications %}
+  <div class="table-card">
+    <div class="table-responsive">
+      <table class="table mb-0">
+        <thead>
+          <tr>
+            <th style="width:22%">Student</th>
+            <th style="width:22%">Drive</th>
+            <th>Company</th>
+            <th>CGPA</th>
+            <th>Status</th>
+            <th>Applied On</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for a in applications %}
+          <tr class="row-{{ a.status }}">
+
+            <!-- Student -->
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <div class="stu-avatar">{{ a.student_name[0]|upper }}</div>
+                <div style="min-width:0">
+                  <div style="font-weight:600;font-size:14px;
+                              white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px">
+                    {{ a.student_name }}
+                  </div>
+                  <div style="font-size:12px;color:var(--light)">{{ a.student_id }}</div>
+                </div>
+              </div>
+            </td>
+
+            <!-- Drive -->
+            <td>
+              <div style="font-weight:500;font-size:13px;
+                          white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:160px">
+                {{ a.job_title }}
+              </div>
+            </td>
+
+            <!-- Company -->
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <div class="co-logo">{{ a.company_name[0]|upper }}</div>
+                <span style="font-size:13px;color:var(--mid);
+                             white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:120px">
+                  {{ a.company_name }}
+                </span>
+              </div>
+            </td>
+
+            <!-- CGPA -->
+            <td>
+              <span class="cgpa-chip">{{ a.cgpa if a.cgpa is defined else '—' }}</span>
+            </td>
+
+            <!-- Status -->
+            <td>
+              <span class="badge b-{{ a.status }}">
+                {% if a.status == 'applied' %}<i class="bi bi-send me-1"></i>
+                {% elif a.status == 'shortlisted' %}<i class="bi bi-list-check me-1"></i>
+                {% elif a.status == 'selected' %}<i class="bi bi-trophy me-1"></i>
+                {% else %}<i class="bi bi-x me-1"></i>{% endif %}
+                {{ a.status|capitalize }}
+              </span>
+            </td>
+
+            <!-- Applied date -->
+            <td>
+              <div class="date-chip">
+                <i class="bi bi-calendar3" style="font-size:11px"></i>
+                {{ a.applied_at.strftime('%Y-%m-%d') if a.applied_at else '—' }}
+              </div>
+            </td>
+
+            <!-- Actions -->
+            <td>
+              <div class="d-flex gap-2">
+                <a href="{{ url_for('admin.student_detail', student_id=a.student_id) }}"
+                   class="btn btn-sm btn-outline-primary"
+                   style="font-size:12px;padding:.25rem .65rem;border-radius:7px">
+                  Student
+                </a>
+                <a href="{{ url_for('admin.drive_detail', drive_id=a.drive_id) }}"
+                   class="btn btn-sm btn-outline-secondary"
+                   style="font-size:12px;padding:.25rem .65rem;border-radius:7px">
+                  Drive
+                </a>
+              </div>
+            </td>
+
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon"><i class="bi bi-inbox"></i></div>
+    <h3>No applications found</h3>
+    <p>
+      {% if selected_status or request.args.get('search') %}
+        Try clearing your filters.
+        <a href="{{ url_for('admin.applications') }}" style="color:var(--blue)">Reset</a>
+      {% else %}
+        No students have applied to any drives yet.
+      {% endif %}
+    </p>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,718 @@
+{% extends 'base.html' %}
+{% block title %}{{ company.company_name }} — Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ── HERO ── */
+  .profile-hero {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 2.5rem 0 0;
+  }
+  .hero-inner {
+    padding: 0 2rem 1.5rem;
+    display: flex; align-items: flex-start;
+    gap: 1.5rem; flex-wrap: wrap;
+  }
+  .company-avatar {
+    width: 76px; height: 76px; border-radius: 20px;
+    background: var(--blue-lt); color: var(--blue);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 30px; flex-shrink: 0;
+    border: 3px solid var(--white);
+    box-shadow: 0 2px 12px rgba(37,99,235,.15);
+  }
+  .hero-meta { flex: 1; min-width: 0; }
+  .hero-meta h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.8rem; font-weight: 400; margin-bottom: .3rem;
+  }
+  .hero-meta .sub {
+    color: var(--mid); font-size: 14px;
+    display: flex; align-items: center; gap: .75rem; flex-wrap: wrap;
+  }
+  .hero-actions {
+    display: flex; gap: 8px; align-items: center;
+    flex-wrap: wrap; align-self: flex-start;
+    padding-top: .25rem;
+  }
+
+  /* ── TABS ── */
+  .detail-tabs {
+    display: flex; gap: 0; padding: 0 2rem;
+    border-bottom: 1px solid var(--border);
+    background: var(--white);
+    overflow-x: auto; margin-bottom: 2rem;
+  }
+  .detail-tab {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: .85rem 1rem; font-size: 14px; font-weight: 500;
+    color: var(--mid); text-decoration: none;
+    border-bottom: 2px solid transparent;
+    transition: all .15s; white-space: nowrap;
+  }
+  .detail-tab:hover { color: var(--blue); }
+  .detail-tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+
+  /* ── LAYOUT ── */
+  .detail-layout {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 1.5rem;
+    align-items: start;
+  }
+  @media(max-width:960px) {
+    .detail-layout { grid-template-columns: 1fr; }
+    .sidebar-col { order: -1; }
+  }
+
+  /* ── SECTION CARD ── */
+  .section-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 14px; overflow: hidden;
+    margin-bottom: 1.25rem;
+  }
+  .sc-header {
+    padding: .9rem 1.4rem;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .sc-header h2 {
+    font-size: 14px; font-weight: 600;
+    color: var(--dark); margin: 0; flex: 1;
+  }
+  .sc-icon {
+    width: 28px; height: 28px; border-radius: 7px;
+    background: var(--blue-lt); color: var(--blue);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; flex-shrink: 0;
+  }
+  .sc-body { padding: 1.4rem; }
+
+  /* ── INFO GRID ── */
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px,1fr));
+    gap: 1.25rem;
+  }
+  .info-item .ii-label {
+    font-size: 11px; color: var(--light);
+    text-transform: uppercase; letter-spacing:.05em;
+    margin-bottom: .3rem;
+  }
+  .info-item .ii-val {
+    font-size: 14px; font-weight: 500; color: var(--dark);
+    word-break: break-word;
+  }
+  .info-item .ii-val.muted { color: var(--mid); font-weight: 400; }
+  .info-item .ii-val a { color: var(--blue); text-decoration: none; }
+  .info-item .ii-val a:hover { text-decoration: underline; }
+
+  /* ── BADGES ── */
+  .badge {
+    font-weight: 500; font-size: 11px;
+    padding: .35em .75em; border-radius: 6px;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .b-pending     { background:#FFFBEB; color:#92400E; border:1px solid #FDE68A; }
+  .b-approved    { background:#ECFDF5; color:#065F46; border:1px solid #A7F3D0; }
+  .b-rejected    { background:#FEF2F2; color:#991B1B; border:1px solid #FECACA; }
+  .b-closed      { background:#F1F5F9; color:#475569; border:1px solid #E2E8F0; }
+  .b-active      { background:#ECFDF5; color:#065F46; border:1px solid #A7F3D0; }
+  .b-blacklisted { background:#FEF2F2; color:#991B1B; border:1px solid #FECACA; }
+
+  /* ── STAT MINI ── */
+  .stat-row {
+    display: grid; grid-template-columns: repeat(4,1fr);
+    gap: .75rem; margin-bottom: 1.5rem;
+  }
+  @media(max-width:600px) { .stat-row { grid-template-columns: repeat(2,1fr); } }
+  .stat-mini {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1rem; text-align: center;
+  }
+  .sm-val   { font-size:1.5rem; font-weight:600; color:var(--dark); line-height:1.2; }
+  .sm-label { font-size:11px; color:var(--light); text-transform:uppercase; letter-spacing:.05em; margin-top:.2rem; }
+
+  /* ── DRIVES TABLE ── */
+  .table-card {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 14px; overflow: hidden;
+  }
+  .table-card .table { margin:0; font-size:14px; border-collapse:collapse; }
+  .table-card .table thead th {
+    background: var(--surface); color: var(--light);
+    font-weight:500; font-size:11px;
+    text-transform:uppercase; letter-spacing:.06em;
+    border-bottom:1px solid var(--border);
+    padding:.75rem 1.1rem; white-space:nowrap;
+  }
+  .table-card .table tbody td {
+    padding:.8rem 1.1rem;
+    border-bottom:1px solid var(--border);
+    vertical-align:middle;
+  }
+  .table-card .table tbody tr:last-child td { border-bottom:none; }
+  .table-card .table tbody tr {
+    transition:background .12s;
+    animation:fadeIn .25s ease both;
+  }
+  .table-card .table tbody tr:hover { background:var(--surface); }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+  /* count badge */
+  .count-badge {
+    display:inline-flex; align-items:center; justify-content:center;
+    min-width:22px; height:22px; border-radius:11px;
+    background:var(--blue-lt); color:var(--blue);
+    font-size:11px; font-weight:600; padding:0 6px;
+  }
+
+  /* type pill */
+  .type-pill {
+    display:inline-flex; align-items:center; gap:4px;
+    font-size:11px; color:var(--mid);
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:5px; padding:.2rem .55rem;
+  }
+
+  /* ── HR CONTACT CARD ── */
+  .hr-card {
+    display:flex; align-items:center; gap:1rem;
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:12px; padding:1rem;
+  }
+  .hr-avatar {
+    width:46px; height:46px; border-radius:50%;
+    background:var(--blue-lt); color:var(--blue);
+    display:flex; align-items:center; justify-content:center;
+    font-weight:700; font-size:17px; flex-shrink:0;
+  }
+  .hr-detail { font-size:13px; color:var(--mid); display:flex; align-items:center; gap:6px; margin-top:2px; }
+  .hr-detail i { color:var(--light); font-size:12px; }
+  .hr-detail a { color:var(--blue); text-decoration:none; }
+
+  /* ── SIDEBAR ACTION CARD ── */
+  .action-card {
+    background:var(--white); border:1px solid var(--border);
+    border-radius:14px; overflow:hidden; margin-bottom:1.25rem;
+  }
+  .action-card .ac-header {
+    padding:.9rem 1.4rem; border-bottom:1px solid var(--border);
+    font-size:14px; font-weight:600; color:var(--dark);
+  }
+  .action-card .ac-body {
+    padding:1rem; display:flex; flex-direction:column; gap:8px;
+  }
+  .action-card form { margin:0; }
+
+  .btn-action {
+    display:flex; align-items:center; justify-content:center; gap:7px;
+    width:100%; padding:.55rem 1rem;
+    border-radius:9px; font-size:14px; font-weight:500;
+    cursor:pointer; transition:all .15s;
+    border:1px solid var(--border); background:var(--white); color:var(--mid);
+    text-decoration:none; font-family:'DM Sans',sans-serif;
+  }
+  .btn-action:hover { border-color:var(--blue); color:var(--blue); background:var(--blue-lt); }
+  .btn-action.approve { background:#ECFDF5; color:#065F46; border-color:#A7F3D0; }
+  .btn-action.approve:hover { background:#10B981; color:#fff; border-color:#10B981; }
+  .btn-action.reject  { background:#FEF2F2; color:#991B1B; border-color:#FECACA; }
+  .btn-action.reject:hover  { background:#EF4444; color:#fff; border-color:#EF4444; }
+  .btn-action.danger  { background:#FEF2F2; color:#991B1B; border-color:#FECACA; }
+  .btn-action.danger:hover  { background:#EF4444; color:#fff; border-color:#EF4444; }
+  .btn-action.warn    { background:#FFFBEB; color:#92400E; border-color:#FDE68A; }
+  .btn-action.warn:hover    { background:#F59E0B; color:#fff; border-color:#F59E0B; }
+  .btn-action.success { background:#ECFDF5; color:#065F46; border-color:#A7F3D0; }
+  .btn-action.success:hover { background:#10B981; color:#fff; border-color:#10B981; }
+
+  /* divider inside action card */
+  .ac-divider {
+    height:1px; background:var(--border); margin:.25rem 0;
+  }
+
+  /* ── SNAP ROWS ── */
+  .snap-row {
+    display:flex; justify-content:space-between; align-items:center;
+    font-size:13px; padding:.5rem 0;
+    border-bottom:1px solid var(--border);
+  }
+  .snap-row:last-child { border-bottom:none; }
+  .snap-row .sr-label { color:var(--light); }
+  .snap-row .sr-val   { font-weight:500; color:var(--dark); }
+
+  /* ── DESCRIPTION ── */
+  .desc-block {
+    font-size:14px; color:var(--mid); line-height:1.8;
+    white-space:pre-wrap; border-left:3px solid var(--blue-lt);
+    padding-left:1rem; margin:0;
+  }
+
+  /* ── EMPTY STATE ── */
+  .empty-state { text-align:center; padding:3rem 2rem; }
+  .empty-state i { font-size:2.5rem; color:var(--light); display:block; margin-bottom:.75rem; }
+  .empty-state p { font-size:14px; color:var(--light); }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- PROFILE HERO -->
+<div class="profile-hero">
+  <div class="hero-inner container-fluid">
+    <a href="{{ url_for('admin.companies') }}"
+       style="position:absolute;font-size:13px;color:var(--mid);text-decoration:none;
+              display:inline-flex;align-items:center;gap:5px;top:2.2rem;left:2rem">
+      <i class="bi bi-arrow-left"></i> Back to Companies
+    </a>
+
+    <div class="company-avatar" style="margin-top:1.5rem">
+      {{ company.company_name[0]|upper }}
+    </div>
+
+    <div class="hero-meta" style="margin-top:1.5rem">
+      <h1>{{ company.company_name }}</h1>
+      <div class="sub">
+        <span>{{ company.industry or 'No industry specified' }}</span>
+        <span class="badge b-{{ company.approval_status }}">
+          {% if company.approval_status == 'approved' %}
+            <i class="bi bi-check-circle-fill"></i>
+          {% elif company.approval_status == 'pending' %}
+            <i class="bi bi-hourglass-split"></i>
+          {% else %}
+            <i class="bi bi-x-circle-fill"></i>
+          {% endif %}
+          {{ company.approval_status|capitalize }}
+        </span>
+        <span class="badge b-{{ company.account_status }}">
+          {{ company.account_status|capitalize }}
+        </span>
+        {% if company.website %}
+        <a href="{{ company.website }}" target="_blank"
+           style="font-size:13px;color:var(--blue);text-decoration:none">
+          <i class="bi bi-box-arrow-up-right me-1" style="font-size:11px"></i>
+          Website
+        </a>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="hero-actions" style="margin-top:1.5rem">
+      {% if company.approval_status == 'pending' %}
+      <form method="POST"
+            action="{{ url_for('admin.approve_company', company_id=company.id) }}">
+        <button type="submit"
+                class="btn btn-success btn-sm"
+                style="display:flex;align-items:center;gap:5px">
+          <i class="bi bi-check-lg"></i> Approve
+        </button>
+      </form>
+      <form method="POST"
+            action="{{ url_for('admin.reject_company', company_id=company.id) }}"
+            onsubmit="return confirm('Reject this company?')">
+        <button type="submit"
+                class="btn btn-danger btn-sm"
+                style="display:flex;align-items:center;gap:5px">
+          <i class="bi bi-x-lg"></i> Reject
+        </button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="detail-tabs container-fluid px-0">
+    <a href="#overview"   class="detail-tab active">Overview</a>
+    <a href="#drives"     class="detail-tab">Drives ({{ drives|length }})</a>
+    <a href="#contact"    class="detail-tab">HR Contact</a>
+    {% if company.description %}
+    <a href="#about"      class="detail-tab">About</a>
+    {% endif %}
+  </div>
+</div>
+
+<div class="container-fluid px-4">
+
+  <!-- STAT MINI CARDS -->
+  {% set total_drives   = drives|length %}
+  {% set active_drives  = drives|selectattr('status','equalto','approved')|list|length %}
+  {% set total_apps     = drives|sum(attribute='applicant_count') %}
+  {% set pending_drives = drives|selectattr('status','equalto','pending')|list|length %}
+
+  <div class="stat-row mt-1">
+    <div class="stat-mini">
+      <div class="sm-val" style="color:var(--blue)">{{ total_drives }}</div>
+      <div class="sm-label">Total Drives</div>
+    </div>
+    <div class="stat-mini">
+      <div class="sm-val" style="color:#10B981">{{ active_drives }}</div>
+      <div class="sm-label">Active Drives</div>
+    </div>
+    <div class="stat-mini">
+      <div class="sm-val" style="color:#7C3AED">{{ total_apps }}</div>
+      <div class="sm-label">Total Applicants</div>
+    </div>
+    <div class="stat-mini">
+      <div class="sm-val" style="color:#F59E0B">{{ pending_drives }}</div>
+      <div class="sm-label">Pending Approval</div>
+    </div>
+  </div>
+
+  <div class="detail-layout">
+
+    <!-- ── LEFT: MAIN ── -->
+    <div>
+
+      <!-- Overview -->
+      <div class="section-card" id="overview">
+        <div class="sc-header">
+          <div class="sc-icon"><i class="bi bi-building"></i></div>
+          <h2>Company Details</h2>
+        </div>
+        <div class="sc-body">
+          <div class="info-grid">
+            <div class="info-item">
+              <div class="ii-label">Company Name</div>
+              <div class="ii-val">{{ company.company_name }}</div>
+            </div>
+            <div class="info-item">
+              <div class="ii-label">Industry</div>
+              <div class="ii-val {% if not company.industry %}muted{% endif %}">
+                {{ company.industry or 'Not specified' }}
+              </div>
+            </div>
+            <div class="info-item">
+              <div class="ii-label">Login Email</div>
+              <div class="ii-val" style="font-size:13px">{{ company.email }}</div>
+            </div>
+            <div class="info-item">
+              <div class="ii-label">Website</div>
+              <div class="ii-val">
+                {% if company.website %}
+                <a href="{{ company.website }}" target="_blank">
+                  <i class="bi bi-box-arrow-up-right me-1" style="font-size:11px"></i>
+                  {{ company.website }}
+                </a>
+                {% else %}
+                <span class="muted">Not provided</span>
+                {% endif %}
+              </div>
+            </div>
+            <div class="info-item">
+              <div class="ii-label">Approval Status</div>
+              <div class="ii-val">
+                <span class="badge b-{{ company.approval_status }}">
+                  {{ company.approval_status|capitalize }}
+                </span>
+              </div>
+            </div>
+            <div class="info-item">
+              <div class="ii-label">Account Status</div>
+              <div class="ii-val">
+                <span class="badge b-{{ company.account_status }}">
+                  {{ company.account_status|capitalize }}
+                </span>
+              </div>
+            </div>
+            <div class="info-item">
+              <div class="ii-label">Registered</div>
+              <div class="ii-val muted">
+                {{ company.created_at.strftime('%Y-%m-%d') if company.created_at else '—' }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HR Contact -->
+      <div class="section-card" id="contact">
+        <div class="sc-header">
+          <div class="sc-icon"><i class="bi bi-person-badge"></i></div>
+          <h2>HR Contact</h2>
+        </div>
+        <div class="sc-body">
+          {% if company.hr_contact_name %}
+          <div class="hr-card">
+            <div class="hr-avatar">{{ company.hr_contact_name[0]|upper }}</div>
+            <div>
+              <div style="font-weight:600;font-size:14px">{{ company.hr_contact_name }}</div>
+              <div style="font-size:12px;color:var(--mid)">HR Manager</div>
+              {% if company.hr_contact_email %}
+              <div class="hr-detail">
+                <i class="bi bi-envelope"></i>
+                <a href="mailto:{{ company.hr_contact_email }}">
+                  {{ company.hr_contact_email }}
+                </a>
+              </div>
+              {% endif %}
+              {% if company.hr_contact_phone %}
+              <div class="hr-detail">
+                <i class="bi bi-telephone"></i>
+                <span>{{ company.hr_contact_phone }}</span>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+          {% else %}
+          <p style="color:var(--light);font-size:14px">No HR contact information provided.</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- About -->
+      {% if company.description %}
+      <div class="section-card" id="about">
+        <div class="sc-header">
+          <div class="sc-icon"><i class="bi bi-file-text"></i></div>
+          <h2>About the Company</h2>
+        </div>
+        <div class="sc-body">
+          <p class="desc-block">{{ company.description }}</p>
+        </div>
+      </div>
+      {% endif %}
+
+      <!-- Drives -->
+      <div class="section-card" id="drives">
+        <div class="sc-header">
+          <div class="sc-icon"><i class="bi bi-briefcase"></i></div>
+          <h2>Placement Drives</h2>
+          {% if pending_drives > 0 %}
+          <span class="badge b-pending ms-auto">
+            <i class="bi bi-hourglass-split"></i>
+            {{ pending_drives }} pending
+          </span>
+          {% endif %}
+        </div>
+        {% if drives %}
+        <div class="table-responsive">
+          <table class="table mb-0">
+            <thead>
+              <tr>
+                <th>Drive</th>
+                <th>Type</th>
+                <th>Deadline</th>
+                <th style="text-align:center">Applicants</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for d in drives %}
+              <tr>
+                <!-- Drive title -->
+                <td>
+                  <div style="font-weight:600;font-size:13px">{{ d.job_title }}</div>
+                  {% if d.location %}
+                  <div style="font-size:11px;color:var(--light)">
+                    <i class="bi bi-geo-alt"></i> {{ d.location }}
+                  </div>
+                  {% endif %}
+                  {% if d.salary_package %}
+                  <div style="font-size:11px;color:var(--mid)">
+                    <i class="bi bi-currency-rupee"></i> {{ d.salary_package }}
+                  </div>
+                  {% endif %}
+                </td>
+
+                <!-- Type -->
+                <td>
+                  <span class="type-pill">
+                    <i class="bi bi-briefcase" style="font-size:10px"></i>
+                    {{ d.job_type.replace('_',' ')|capitalize }}
+                  </span>
+                </td>
+
+                <!-- Deadline -->
+                <td style="font-size:12px;color:var(--mid);white-space:nowrap">
+                  {{ d.application_deadline }}
+                </td>
+
+                <!-- Applicants -->
+                <td style="text-align:center">
+                  <span class="count-badge">{{ d.applicant_count }}</span>
+                </td>
+
+                <!-- Status -->
+                <td>
+                  <span class="badge b-{{ d.status }}">
+                    {% if d.status == 'pending' %}<i class="bi bi-hourglass-split"></i>
+                    {% elif d.status == 'approved' %}<i class="bi bi-check"></i>
+                    {% elif d.status == 'closed' %}<i class="bi bi-lock"></i>
+                    {% else %}<i class="bi bi-x"></i>{% endif %}
+                    {{ d.status|capitalize }}
+                  </span>
+                </td>
+
+                <!-- Actions -->
+                <td>
+                  <div style="display:flex;gap:5px;flex-wrap:wrap">
+                    <a href="{{ url_for('admin.drive_detail', drive_id=d.id) }}"
+                       class="btn btn-sm btn-outline-primary"
+                       style="font-size:12px;padding:.25rem .65rem;border-radius:7px">
+                      View
+                    </a>
+                    {% if d.status == 'pending' %}
+                    <form method="POST"
+                          action="{{ url_for('admin.approve_drive', drive_id=d.id) }}">
+                      <button type="submit"
+                              class="btn btn-sm btn-success"
+                              style="font-size:12px;padding:.25rem .65rem;border-radius:7px">
+                        Approve
+                      </button>
+                    </form>
+                    <form method="POST"
+                          action="{{ url_for('admin.reject_drive', drive_id=d.id) }}"
+                          onsubmit="return confirm('Reject this drive?')">
+                      <button type="submit"
+                              class="btn btn-sm btn-danger"
+                              style="font-size:12px;padding:.25rem .65rem;border-radius:7px">
+                        Reject
+                      </button>
+                    </form>
+                    {% endif %}
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+          <i class="bi bi-briefcase"></i>
+          <p>No drives created by this company yet.</p>
+        </div>
+        {% endif %}
+      </div>
+
+    </div>
+
+    <!-- ── RIGHT: SIDEBAR ── -->
+    <div class="sidebar-col">
+
+      <!-- Admin Actions -->
+      <div class="action-card">
+        <div class="ac-header">
+          <i class="bi bi-shield-check me-2" style="color:var(--blue)"></i>
+          Admin Actions
+        </div>
+        <div class="ac-body">
+
+          <!-- Approval actions -->
+          {% if company.approval_status == 'pending' %}
+          <form method="POST"
+                action="{{ url_for('admin.approve_company', company_id=company.id) }}">
+            <button type="submit" class="btn-action approve">
+              <i class="bi bi-check-circle-fill"></i> Approve Company
+            </button>
+          </form>
+          <form method="POST"
+                action="{{ url_for('admin.reject_company', company_id=company.id) }}"
+                onsubmit="return confirm('Reject {{ company.company_name }}?')">
+            <button type="submit" class="btn-action reject">
+              <i class="bi bi-x-circle-fill"></i> Reject Company
+            </button>
+          </form>
+
+          {% elif company.approval_status == 'rejected' %}
+          <form method="POST"
+                action="{{ url_for('admin.approve_company', company_id=company.id) }}">
+            <button type="submit" class="btn-action approve">
+              <i class="bi bi-arrow-counterclockwise"></i> Re-approve Company
+            </button>
+          </form>
+          {% endif %}
+
+          <div class="ac-divider"></div>
+
+          <!-- Account toggle -->
+          {% if company.account_status == 'active' %}
+          <form method="POST"
+                action="{{ url_for('admin.blacklist_company', company_id=company.id) }}"
+                onsubmit="return confirm('Blacklist {{ company.company_name }}? They will not be able to log in.')">
+            <button type="submit" class="btn-action warn">
+              <i class="bi bi-slash-circle"></i> Blacklist Account
+            </button>
+          </form>
+          {% else %}
+          <form method="POST"
+                action="{{ url_for('admin.activate_company', company_id=company.id) }}">
+            <button type="submit" class="btn-action success">
+              <i class="bi bi-arrow-counterclockwise"></i> Re-activate Account
+            </button>
+          </form>
+          {% endif %}
+
+          <div class="ac-divider"></div>
+
+          <!-- Delete -->
+          <form method="POST"
+                action="{{ url_for('admin.delete_company', company_id=company.id) }}"
+                onsubmit="return confirm('Permanently delete {{ company.company_name }} and ALL its drives and applications? This cannot be undone.')">
+            <button type="submit" class="btn-action danger">
+              <i class="bi bi-trash3"></i> Delete Company
+            </button>
+          </form>
+
+          <!-- Back -->
+          <a href="{{ url_for('admin.companies') }}" class="btn-action">
+            <i class="bi bi-arrow-left"></i> Back to Companies
+          </a>
+
+        </div>
+      </div>
+
+      <!-- Snapshot -->
+      <div class="section-card">
+        <div class="sc-header">
+          <div class="sc-icon"><i class="bi bi-info-circle"></i></div>
+          <h2>Snapshot</h2>
+        </div>
+        <div class="sc-body" style="padding:1rem 1.4rem">
+          <div class="snap-row">
+            <span class="sr-label">Company ID</span>
+            <span class="sr-val" style="font-family:monospace">#{{ company.id }}</span>
+          </div>
+          <div class="snap-row">
+            <span class="sr-label">Approval</span>
+            <span class="sr-val">
+              <span class="badge b-{{ company.approval_status }}">
+                {{ company.approval_status|capitalize }}
+              </span>
+            </span>
+          </div>
+          <div class="snap-row">
+            <span class="sr-label">Account</span>
+            <span class="sr-val">
+              <span class="badge b-{{ company.account_status }}">
+                {{ company.account_status|capitalize }}
+              </span>
+            </span>
+          </div>
+          <div class="snap-row">
+            <span class="sr-label">Industry</span>
+            <span class="sr-val">{{ company.industry or '—' }}</span>
+          </div>
+          <div class="snap-row">
+            <span class="sr-label">Total Drives</span>
+            <span class="sr-val">{{ total_drives }}</span>
+          </div>
+          <div class="snap-row">
+            <span class="sr-label">Total Applicants</span>
+            <span class="sr-val">{{ total_apps }}</span>
+          </div>
+          <div class="snap-row">
+            <span class="sr-label">Registered</span>
+            <span class="sr-val" style="font-size:12px">
+              {{ company.created_at.strftime('%Y-%m-%d') if company.created_at else '—' }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

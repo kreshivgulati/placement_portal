@@ -1,0 +1,429 @@
+{% extends 'base.html' %}
+{% block title %}Placement Drives — Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ── HERO ── */
+  .page-hero {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 2.2rem 0 1.8rem;
+    margin-bottom: 2rem;
+  }
+  .page-hero h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.9rem; font-weight: 400; margin-bottom: .3rem;
+  }
+  .page-hero p { color: var(--mid); font-size: 14px; }
+
+  /* ── SUMMARY STRIP ── */
+  .summary-strip {
+    display: flex; gap: 1rem; flex-wrap: wrap;
+    margin-bottom: 1.75rem;
+  }
+  .sum-pill {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 12px; padding: .85rem 1.1rem;
+    display: flex; align-items: center; gap: 10px;
+    flex: 1; min-width: 120px;
+  }
+  .sum-pill .sicon {
+    width: 36px; height: 36px; border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; flex-shrink: 0;
+  }
+  .si-blue   { background: #EFF6FF; color: var(--blue); }
+  .si-amber  { background: #FFFBEB; color: #F59E0B; }
+  .si-green  { background: #ECFDF5; color: #10B981; }
+  .si-red    { background: #FEF2F2; color: #EF4444; }
+  .si-gray   { background: var(--surface); color: var(--light); }
+  .sum-pill .slabel { font-size: 11px; color: var(--light); text-transform: uppercase; letter-spacing:.05em; }
+  .sum-pill .sval   { font-size: 1.25rem; font-weight: 600; color: var(--dark); line-height: 1.2; }
+
+  /* ── FILTER BAR ── */
+  .filter-bar {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 14px; padding: 1rem 1.25rem;
+    display: flex; align-items: center;
+    gap: 1rem; flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+  }
+  .search-box { flex: 1; min-width: 220px; position: relative; }
+  .search-box .bi-search {
+    position: absolute; left: 12px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--light); font-size: 14px; pointer-events: none;
+  }
+  .search-box input {
+    padding-left: 2.2rem; border: 1px solid var(--border);
+    border-radius: 8px; font-size: 14px;
+    height: 38px; width: 100%;
+    background: var(--surface); color: var(--dark);
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .search-box input:focus {
+    outline: none; border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+    background: var(--white);
+  }
+  .fpill {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: .35rem .85rem; border-radius: 20px;
+    font-size: 13px; font-weight: 500;
+    border: 1px solid var(--border);
+    background: var(--white); color: var(--mid);
+    text-decoration: none; transition: all .15s; white-space: nowrap;
+  }
+  .fpill:hover { border-color: var(--blue); color: var(--blue); }
+  .fpill.active { background: var(--blue); border-color: var(--blue); color: #fff; }
+
+  /* ── TABLE CARD ── */
+  .table-card {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 14px; overflow: hidden;
+  }
+  .table-card .table { margin: 0; font-size: 14px; border-collapse: collapse; }
+  .table-card .table thead th {
+    background: var(--surface); color: var(--light);
+    font-weight: 500; font-size: 11px;
+    text-transform: uppercase; letter-spacing: .06em;
+    border-bottom: 1px solid var(--border);
+    padding: .8rem 1.1rem;
+  }
+  .table-card .table tbody td {
+    padding: .9rem 1.1rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .table-card .table tbody tr:last-child td { border-bottom: none; }
+  .table-card .table tbody tr {
+    transition: background .12s;
+    animation: fadeIn .25s ease both;
+  }
+  .table-card .table tbody tr:hover { background: var(--surface); }
+  @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
+
+  /* co logo */
+  .co-logo {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: var(--blue-lt); color: var(--blue);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 12px; flex-shrink: 0;
+  }
+
+  /* badges */
+  .badge { font-weight:500; font-size:11px; padding:.32em .68em; border-radius:6px; display:inline-block; }
+  .b-pending  { background:#FFFBEB; color:#92400E; border:1px solid #FDE68A; }
+  .b-approved { background:#ECFDF5; color:#065F46; border:1px solid #A7F3D0; }
+  .b-rejected { background:#FEF2F2; color:#991B1B; border:1px solid #FECACA; }
+  .b-closed   { background:#F1F5F9; color:#475569; border:1px solid #E2E8F0; }
+
+  /* job type pill */
+  .type-pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11px; color: var(--mid);
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 5px; padding: .2rem .55rem;
+  }
+
+  /* action icons */
+  .btn-icon {
+    width: 30px; height: 30px; border-radius: 7px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 13px; border: 1px solid var(--border);
+    background: var(--white); color: var(--mid);
+    text-decoration: none; cursor: pointer;
+    transition: all .15s;
+  }
+  .btn-icon:hover        { border-color: var(--blue);  color: var(--blue);  background: var(--blue-lt); }
+  .btn-icon.success:hover{ border-color: #10B981; color: #10B981; background: #ECFDF5; }
+  .btn-icon.danger:hover { border-color: #EF4444; color: #EF4444; background: #FEF2F2; }
+  .btn-icon.warn:hover   { border-color: #F59E0B; color: #F59E0B; background: #FFFBEB; }
+  .action-forms { display:flex; align-items:center; gap:5px; flex-wrap:wrap; }
+  .action-forms form { margin:0; }
+
+  /* applicant count badge */
+  .count-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 22px; height: 22px; border-radius: 11px;
+    background: var(--blue-lt); color: var(--blue);
+    font-size: 11px; font-weight: 600; padding: 0 6px;
+  }
+
+  /* deadline chip */
+  .deadline-chip {
+    font-size: 12px; color: var(--mid);
+    display: flex; align-items: center; gap: 4px;
+  }
+  .deadline-chip.overdue { color: #EF4444; font-weight: 500; }
+
+  /* results meta */
+  .results-meta { font-size: 13px; color: var(--light); margin-bottom: 1rem; }
+
+  /* empty state */
+  .empty-state { text-align: center; padding: 5rem 2rem; }
+  .empty-icon {
+    width: 72px; height: 72px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 18px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 28px; color: var(--light);
+    margin: 0 auto 1.25rem;
+  }
+  .empty-state h3 { font-size: 1rem; font-weight: 600; margin-bottom: .4rem; }
+  .empty-state p  { font-size: 14px; color: var(--light); }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- HERO -->
+<div class="page-hero">
+  <div class="container-fluid px-4">
+    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+      <div>
+        <h1>Placement Drives</h1>
+        <p>Review, approve and manage all drives submitted by companies</p>
+      </div>
+      {% set pending_count = drives | selectattr('status','equalto','pending') | list | length %}
+      {% if pending_count > 0 %}
+      <div style="background:#FFFBEB;border:1px solid #FDE68A;border-radius:10px;
+                  padding:.6rem 1rem;font-size:13px;color:#92400E;font-weight:500">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        {{ pending_count }} drive{{ 's' if pending_count != 1 }} awaiting approval
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<div class="container-fluid px-4">
+
+  <!-- SUMMARY STRIP -->
+  {% set n_pending  = drives|selectattr('status','equalto','pending') |list|length %}
+  {% set n_approved = drives|selectattr('status','equalto','approved')|list|length %}
+  {% set n_closed   = drives|selectattr('status','equalto','closed')  |list|length %}
+  {% set n_rejected = drives|selectattr('status','equalto','rejected')|list|length %}
+
+  <div class="summary-strip">
+    <div class="sum-pill">
+      <div class="sicon si-blue"><i class="bi bi-briefcase"></i></div>
+      <div><div class="slabel">Total</div><div class="sval">{{ drives|length }}</div></div>
+    </div>
+    <div class="sum-pill">
+      <div class="sicon si-amber"><i class="bi bi-hourglass-split"></i></div>
+      <div><div class="slabel">Pending</div><div class="sval">{{ n_pending }}</div></div>
+    </div>
+    <div class="sum-pill">
+      <div class="sicon si-green"><i class="bi bi-check-circle"></i></div>
+      <div><div class="slabel">Approved</div><div class="sval">{{ n_approved }}</div></div>
+    </div>
+    <div class="sum-pill">
+      <div class="sicon si-gray"><i class="bi bi-lock"></i></div>
+      <div><div class="slabel">Closed</div><div class="sval">{{ n_closed }}</div></div>
+    </div>
+    <div class="sum-pill">
+      <div class="sicon si-red"><i class="bi bi-x-circle"></i></div>
+      <div><div class="slabel">Rejected</div><div class="sval">{{ n_rejected }}</div></div>
+    </div>
+  </div>
+
+  <!-- FILTER + SEARCH BAR -->
+  <form method="GET" action="{{ url_for('admin.drives') }}">
+    <div class="filter-bar">
+      <div class="search-box">
+        <i class="bi bi-search"></i>
+        <input type="text" name="search"
+               value="{{ request.args.get('search','') }}"
+               placeholder="Search by job title or company…"/>
+      </div>
+
+      <div class="d-flex gap-2 flex-wrap">
+        <a href="{{ url_for('admin.drives') }}"
+           class="fpill {% if not selected_status %}active{% endif %}">All</a>
+        {% for s, label, icon in [
+            ('pending',  'Pending',  'bi-hourglass-split'),
+            ('approved', 'Approved', 'bi-check-circle'),
+            ('closed',   'Closed',   'bi-lock'),
+            ('rejected', 'Rejected', 'bi-x-circle')
+        ] %}
+        <a href="?status={{ s }}{% if request.args.get('search') %}&search={{ request.args.get('search') }}{% endif %}"
+           class="fpill {% if selected_status == s %}active{% endif %}">
+          <i class="bi {{ icon }}"></i> {{ label }}
+        </a>
+        {% endfor %}
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-sm" style="height:38px;padding:0 1rem">
+        Search
+      </button>
+      {% if request.args.get('search') or selected_status %}
+      <a href="{{ url_for('admin.drives') }}"
+         class="btn btn-outline-secondary btn-sm" style="height:38px;padding:0 .9rem">
+        <i class="bi bi-x"></i> Clear
+      </a>
+      {% endif %}
+    </div>
+  </form>
+
+  <!-- RESULTS META -->
+  <div class="results-meta">
+    Showing <strong>{{ drives|length }}</strong> drive{{ 's' if drives|length != 1 }}
+    {% if selected_status %} · {{ selected_status|capitalize }}{% endif %}
+    {% if request.args.get('search') %} matching "<strong>{{ request.args.get('search') }}</strong>"{% endif %}
+  </div>
+
+  <!-- TABLE -->
+  {% if drives %}
+  <div class="table-card">
+    <div class="table-responsive">
+      <table class="table mb-0">
+        <thead>
+          <tr>
+            <th style="width:28%">Drive</th>
+            <th>Company</th>
+            <th>Type</th>
+            <th>Eligibility</th>
+            <th>Deadline</th>
+            <th style="text-align:center">Applicants</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for d in drives %}
+          <tr>
+            <!-- Drive title + location -->
+            <td>
+              <div style="font-weight:600;font-size:14px">{{ d.job_title }}</div>
+              {% if d.location %}
+              <div style="font-size:12px;color:var(--light)">
+                <i class="bi bi-geo-alt"></i> {{ d.location }}
+              </div>
+              {% endif %}
+              {% if d.salary_package %}
+              <div style="font-size:12px;color:var(--mid)">
+                <i class="bi bi-currency-rupee"></i> {{ d.salary_package }}
+              </div>
+              {% endif %}
+            </td>
+
+            <!-- Company -->
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <div class="co-logo">{{ d.company_name[0]|upper }}</div>
+                <span style="font-size:13px;color:var(--mid)">{{ d.company_name }}</span>
+              </div>
+            </td>
+
+            <!-- Job type -->
+            <td>
+              <span class="type-pill">
+                <i class="bi bi-briefcase" style="font-size:10px"></i>
+                {{ d.job_type.replace('_',' ')|capitalize }}
+              </span>
+            </td>
+
+            <!-- Eligibility -->
+            <td style="font-size:12px;color:var(--mid)">
+              <div>CGPA ≥ {{ d.eligibility_cgpa }}</div>
+              {% if d.eligible_branches %}
+              <div style="color:var(--light)">{{ d.eligible_branches }}</div>
+              {% endif %}
+            </td>
+
+            <!-- Deadline -->
+            <td>
+              <div class="deadline-chip">
+                <i class="bi bi-calendar3" style="font-size:11px"></i>
+                {{ d.application_deadline }}
+              </div>
+            </td>
+
+            <!-- Applicant count -->
+            <td style="text-align:center">
+              <a href="{{ url_for('admin.drive_detail', drive_id=d.id) }}"
+                 style="text-decoration:none">
+                <span class="count-badge">{{ d.applicant_count }}</span>
+              </a>
+            </td>
+
+            <!-- Status badge -->
+            <td>
+              <span class="badge b-{{ d.status }}">
+                {% if d.status == 'pending' %}<i class="bi bi-hourglass-split me-1"></i>
+                {% elif d.status == 'approved' %}<i class="bi bi-check me-1"></i>
+                {% elif d.status == 'closed' %}<i class="bi bi-lock me-1"></i>
+                {% else %}<i class="bi bi-x me-1"></i>{% endif %}
+                {{ d.status|capitalize }}
+              </span>
+            </td>
+
+            <!-- Actions -->
+            <td>
+              <div class="action-forms">
+                <!-- View detail -->
+                <a href="{{ url_for('admin.drive_detail', drive_id=d.id) }}"
+                   class="btn-icon" title="View">
+                  <i class="bi bi-eye"></i>
+                </a>
+
+                <!-- Approve -->
+                {% if d.status == 'pending' %}
+                <form method="POST" action="{{ url_for('admin.approve_drive', drive_id=d.id) }}">
+                  <button type="submit" class="btn-icon success" title="Approve">
+                    <i class="bi bi-check-lg"></i>
+                  </button>
+                </form>
+                <form method="POST" action="{{ url_for('admin.reject_drive', drive_id=d.id) }}"
+                      onsubmit="return confirm('Reject this drive?')">
+                  <button type="submit" class="btn-icon danger" title="Reject">
+                    <i class="bi bi-x-lg"></i>
+                  </button>
+                </form>
+                {% endif %}
+
+                <!-- Re-approve a rejected drive -->
+                {% if d.status == 'rejected' %}
+                <form method="POST" action="{{ url_for('admin.approve_drive', drive_id=d.id) }}">
+                  <button type="submit" class="btn-icon success" title="Approve">
+                    <i class="bi bi-check-lg"></i>
+                  </button>
+                </form>
+                {% endif %}
+
+                <!-- Close an approved drive -->
+                {% if d.status == 'approved' %}
+                <form method="POST" action="{{ url_for('admin.close_drive', drive_id=d.id) }}"
+                      onsubmit="return confirm('Close this drive?')">
+                  <button type="submit" class="btn-icon warn" title="Close drive">
+                    <i class="bi bi-lock"></i>
+                  </button>
+                </form>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon"><i class="bi bi-briefcase"></i></div>
+    <h3>No drives found</h3>
+    <p>
+      {% if selected_status or request.args.get('search') %}
+        Try clearing your filters.
+        <a href="{{ url_for('admin.drives') }}" style="color:var(--blue)">Reset</a>
+      {% else %}
+        No placement drives have been submitted yet.
+      {% endif %}
+    </p>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

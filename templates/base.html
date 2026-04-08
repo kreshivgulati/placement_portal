@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>{% block title %}PlacementPlus{% endblock %}</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=DM+Serif+Display&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --blue:       #2563EB;
+      --blue-lt:    #EFF6FF;
+      --blue-dk:    #1D4ED8;
+      --dark:       #0F172A;
+      --mid:        #475569;
+      --light:      #94A3B8;
+      --border:     #E2E8F0;
+      --surface:    #F8FAFC;
+      --white:      #FFFFFF;
+      --green:      #10B981;
+      --amber:      #F59E0B;
+      --red:        #EF4444;
+      --purple:     #7C3AED;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--surface);
+      color: var(--dark);
+      font-size: 15px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ── NAVBAR ── */
+    .navbar {
+      background: var(--white) !important;
+      border-bottom: 1px solid var(--border);
+      height: 64px;
+      padding: 0 1.5rem;
+      position: sticky; top: 0; z-index: 999;
+    }
+    .navbar-brand {
+      font-weight: 600; font-size: 1.15rem;
+      color: var(--blue) !important;
+      display: flex; align-items: center; gap: 8px;
+      text-decoration: none;
+    }
+    .brand-dot {
+      width: 28px; height: 28px; border-radius: 7px;
+      background: var(--blue);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-size: 13px;
+    }
+    .nav-link {
+      color: var(--mid) !important;
+      font-size: 14px; font-weight: 400;
+      padding: 0.38rem 0.85rem !important;
+      border-radius: 7px;
+      transition: all .15s;
+    }
+    .nav-link:hover, .nav-link.active {
+      color: var(--blue) !important;
+      background: var(--blue-lt);
+    }
+    .btn-nav {
+      background: var(--blue); color: #fff !important;
+      border-radius: 8px; font-size: 14px; font-weight: 500;
+      padding: 0.38rem 1rem !important;
+      transition: background .15s;
+      border: none;
+    }
+    .btn-nav:hover { background: var(--blue-dk); }
+    .user-pill {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 14px; color: var(--mid);
+    }
+    .user-avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: var(--blue-lt); color: var(--blue);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 600; font-size: 13px;
+    }
+
+    /* ── PAGE ── */
+    .page-wrap { min-height: calc(100vh - 64px); padding: 2rem 0; }
+
+    /* ── CARDS ── */
+    .card {
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--white);
+      box-shadow: 0 1px 3px rgba(0,0,0,.04);
+    }
+    .card-header {
+      background: transparent;
+      border-bottom: 1px solid var(--border);
+      padding: 1rem 1.4rem;
+      font-weight: 600; font-size: 15px;
+    }
+    .card-body { padding: 1.4rem; }
+
+    /* ── STAT CARDS ── */
+    .stat-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 1.25rem 1.4rem;
+      display: flex; align-items: center; gap: 1rem;
+    }
+    .stat-icon {
+      width: 50px; height: 50px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; flex-shrink: 0;
+    }
+    .si-blue   { background:#EFF6FF; color:var(--blue); }
+    .si-green  { background:#ECFDF5; color:var(--green); }
+    .si-amber  { background:#FFFBEB; color:var(--amber); }
+    .si-red    { background:#FEF2F2; color:var(--red); }
+    .si-purple { background:#F5F3FF; color:var(--purple); }
+    .stat-label {
+      font-size: 11px; color: var(--light);
+      text-transform: uppercase; letter-spacing:.06em; font-weight:500;
+    }
+    .stat-val {
+      font-size: 1.75rem; font-weight: 600;
+      color: var(--dark); line-height: 1.2;
+    }
+
+    /* ── BUTTONS ── */
+    .btn-primary {
+      background: var(--blue); border-color: var(--blue);
+      border-radius: 8px; font-weight: 500; font-size: 14px;
+    }
+    .btn-primary:hover { background: var(--blue-dk); border-color: var(--blue-dk); }
+    .btn-outline-primary {
+      border-color: var(--blue); color: var(--blue);
+      border-radius: 8px; font-size: 14px; font-weight: 500;
+    }
+    .btn-outline-primary:hover { background: var(--blue); color: #fff; }
+    .btn { border-radius: 8px; font-size: 14px; font-weight: 500; }
+    .btn-sm { font-size: 13px; padding: .3rem .75rem; }
+
+    /* ── BADGES ── */
+    .badge { font-weight: 500; font-size: 11px; padding:.35em .7em; border-radius:6px; }
+    .b-pending     { background:#FFFBEB; color:#92400E; border:1px solid #FDE68A; }
+    .b-approved    { background:#ECFDF5; color:#065F46; border:1px solid #A7F3D0; }
+    .b-rejected    { background:#FEF2F2; color:#991B1B; border:1px solid #FECACA; }
+    .b-closed      { background:#F1F5F9; color:#475569; border:1px solid #E2E8F0; }
+    .b-applied     { background:#EFF6FF; color:#1E40AF; border:1px solid #BFDBFE; }
+    .b-shortlisted { background:#F5F3FF; color:#5B21B6; border:1px solid #DDD6FE; }
+    .b-selected    { background:#ECFDF5; color:#065F46; border:1px solid #A7F3D0; }
+
+    /* ── TABLE ── */
+    .table { font-size: 14px; }
+    .table thead th {
+      background: var(--surface);
+      color: var(--light); font-weight:500;
+      font-size: 11px; text-transform:uppercase; letter-spacing:.06em;
+      border-bottom: 1px solid var(--border);
+      padding: .75rem 1rem;
+    }
+    .table tbody td {
+      padding: .8rem 1rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: middle;
+    }
+    .table tbody tr:last-child td { border-bottom: none; }
+    .table tbody tr:hover { background: var(--surface); }
+
+    /* ── FORMS ── */
+    .form-control, .form-select {
+      border: 1px solid var(--border);
+      border-radius: 8px; font-size: 14px;
+      padding: .5rem .85rem;
+      color: var(--dark);
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .form-control:focus, .form-select:focus {
+      border-color: var(--blue);
+      box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+    }
+    .form-label { font-size: 13px; font-weight:500; color:var(--mid); margin-bottom:.3rem; }
+
+    /* ── ALERTS ── */
+    .alert { border-radius: 10px; font-size: 14px; border: none; }
+
+    /* ── PAGE HEADER ── */
+    .pg-header { margin-bottom: 1.8rem; }
+    .pg-header h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.75rem; font-weight: 400;
+    }
+    .pg-header p { color: var(--mid); font-size: 14px; margin-top:.2rem; }
+
+    /* ── SEARCH ── */
+    .search-box { position: relative; }
+    .search-box .bi-search {
+      position:absolute; left:12px; top:50%;
+      transform:translateY(-50%);
+      color:var(--light); font-size:14px; pointer-events:none;
+    }
+    .search-box .form-control { padding-left: 2.2rem; }
+
+    /* ── DRIVE CARD ── */
+    .drive-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 14px; padding: 1.3rem;
+      transition: box-shadow .2s, transform .2s;
+      height: 100%;
+    }
+    .drive-card:hover {
+      box-shadow: 0 8px 24px rgba(0,0,0,.08);
+      transform: translateY(-2px);
+    }
+    .co-logo {
+      width: 42px; height: 42px; border-radius: 10px;
+      background: var(--blue-lt); color: var(--blue);
+      display:flex; align-items:center; justify-content:center;
+      font-weight:700; font-size:15px; flex-shrink:0;
+    }
+
+    /* ── EMPTY STATE ── */
+    .empty-state {
+      text-align:center; padding:4rem 2rem; color:var(--light);
+    }
+    .empty-state i { font-size:3rem; margin-bottom:1rem; display:block; }
+    .empty-state p { font-size:14px; }
+  </style>
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg">
+  <div class="container-fluid px-2">
+    <a class="navbar-brand" href="{{ url_for('auth.index') }}">
+      <span class="brand-dot"><i class="bi bi-plus-lg"></i></span>
+      PlacementPlus
+    </a>
+
+    <button class="navbar-toggler border-0 shadow-none" type="button"
+            data-bs-toggle="collapse" data-bs-target="#navMain">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navMain">
+
+      {% if session.role == 'admin' %}
+      <ul class="navbar-nav ms-3 me-auto gap-1">
+        <li class="nav-item"><a class="nav-link {% if request.endpoint=='admin.dashboard' %}active{% endif %}" href="{{ url_for('admin.dashboard') }}">Dashboard</a></li>
+        <li class="nav-item"><a class="nav-link {% if request.endpoint=='admin.students' %}active{% endif %}" href="{{ url_for('admin.students') }}">Students</a></li>
+        <li class="nav-item"><a class="nav-link {% if request.endpoint=='admin.companies' %}active{% endif %}" href="{{ url_for('admin.companies') }}">Companies</a></li>
+        <li class="nav-item"><a class="nav-link {% if request.endpoint=='admin.drives' %}active{% endif %}" href="{{ url_for('admin.drives') }}">Drives</a></li>
+        <li class="nav-item"><a class="nav-link {% if request.endpoint=='admin.applications' %}active{% endif %}" href="{{ url_for('admin.applications') }}">Applications</a></li>
+      </ul>
+
+      {% elif session.role == 'company' %}
+      <ul class="navbar-nav ms-3 me-auto gap-1">
+        <li class="nav-item"><a class="nav-link {% if request.endpoint=='company.dashboard' %}active{% endif %}" href="{{ url_for('company.dashboard') }}">Dashboard</a></li>
+        <li class="nav-item"><a class="nav-link {% if request.endpoint=='company.drives' %}active{% endif %}" href="{{ url_for('company.drives') }}">My Drives</a></li>
+        <li class="nav-item"><a class="nav-link {% if request.endpoint=='company.profile' %}active{% endif %}" href="{{ url_for('company.profile') }}">Profile</a></li>
+      </ul>
+
+      {% elif session.role == 'student' %}
+      <ul class="navbar-nav ms-3 me-auto gap-1">
+        <li class="nav-item"><a class="nav-link {% if request.endpoint=='student.dashboard' %}active{% endif %}" href="{{ url_for('student.dashboard') }}">Dashboard</a></li>
+        <li class="nav-item"><a class="nav-link {% if request.endpoint=='student.drives' %}active{% endif %}" href="{{ url_for('student.drives') }}">Browse Drives</a></li>
+        <li class="nav-item"><a class="nav-link {% if request.endpoint=='student.my_applications' %}active{% endif %}" href="{{ url_for('student.my_applications') }}">My Applications</a></li>
+        <li class="nav-item"><a class="nav-link {% if request.endpoint=='student.history' %}active{% endif %}" href="{{ url_for('student.history') }}">History</a></li>
+      </ul>
+
+      {% else %}
+      <ul class="navbar-nav ms-3 me-auto"></ul>
+      {% endif %}
+
+      <div class="d-flex align-items-center gap-3">
+        {% if session.user_id %}
+          <div class="user-pill">
+            <div class="user-avatar">{{ session.name[0]|upper }}</div>
+            <span class="d-none d-md-inline" style="font-size:14px;color:var(--mid)">{{ session.name }}</span>
+          </div>
+          <a href="{{ url_for('auth.logout') }}" class="nav-link" style="font-size:13px">
+            <i class="bi bi-box-arrow-right"></i>
+          </a>
+        {% else %}
+          <a href="{{ url_for('auth.login') }}" class="nav-link">Login</a>
+          <a href="{{ url_for('auth.register_student') }}" class="btn-nav nav-link">Sign Up</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- FLASH MESSAGES -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="container mt-3">
+      {% for cat, msg in messages %}
+        <div class="alert alert-{{ 'danger' if cat == 'error' else cat }} alert-dismissible fade show">
+          {{ msg }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+<main class="page-wrap">
+  {% block content %}{% endblock %}
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

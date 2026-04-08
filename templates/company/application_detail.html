@@ -1,0 +1,447 @@
+{% extends 'base.html' %}
+{% block title %}Application Detail — {{ application.student_name }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ── HERO ── */
+  .page-hero {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 2rem 0 1.6rem;
+    margin-bottom: 2rem;
+  }
+  .page-hero h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.75rem; font-weight: 400; margin-bottom: .25rem;
+  }
+  .page-hero p { color: var(--mid); font-size: 14px; }
+
+  /* ── LAYOUT ── */
+  .detail-layout {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 1.5rem;
+    align-items: start;
+  }
+  @media(max-width:900px) {
+    .detail-layout { grid-template-columns: 1fr; }
+    .sidebar-col { order: -1; }
+  }
+
+  /* ── SECTION CARD ── */
+  .section-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 14px; overflow: hidden;
+    margin-bottom: 1.25rem;
+  }
+  .sc-header {
+    padding: .9rem 1.4rem;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .sc-header h2 {
+    font-size: 13px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .05em;
+    color: var(--mid); margin: 0; flex: 1;
+  }
+  .sc-icon {
+    width: 28px; height: 28px; border-radius: 7px;
+    background: var(--blue-lt); color: var(--blue);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; flex-shrink: 0;
+  }
+  .sc-body { padding: 1.4rem; }
+
+  /* ── INFO ROWS ── */
+  .info-row {
+    display: flex; justify-content: space-between;
+    align-items: center;
+    font-size: 13px; padding: .65rem 0;
+    border-bottom: 1px solid var(--border);
+    gap: 1rem;
+  }
+  .info-row:last-child { border-bottom: none; }
+  .ir-label { color: var(--light); flex-shrink: 0; }
+  .ir-val   { font-weight: 500; color: var(--dark); text-align: right; }
+
+  /* ── STUDENT AVATAR HEADER ── */
+  .student-header {
+    display: flex; align-items: center; gap: 1rem;
+    padding: 1.4rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .stu-avatar-lg {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: var(--blue-lt); color: var(--blue);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 22px; flex-shrink: 0;
+  }
+  .stu-name  { font-size: 1.1rem; font-weight: 600; color: var(--dark); }
+  .stu-email { font-size: 13px; color: var(--light); }
+  .stu-id    {
+    font-size: 12px; font-family: monospace;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 5px; padding: .15rem .5rem; color: var(--mid);
+    display: inline-block; margin-top: 3px;
+  }
+
+  /* ── BADGES ── */
+  .badge { font-weight:500; font-size:11px; padding:.35em .75em; border-radius:6px; display:inline-flex; align-items:center; gap:4px; }
+  .b-applied     { background:#EFF6FF; color:#1E40AF; border:1px solid #BFDBFE; }
+  .b-shortlisted { background:#F5F3FF; color:#5B21B6; border:1px solid #DDD6FE; }
+  .b-selected    { background:#ECFDF5; color:#065F46; border:1px solid #A7F3D0; }
+  .b-rejected    { background:#FEF2F2; color:#991B1B; border:1px solid #FECACA; }
+  .b-pending     { background:#FFFBEB; color:#92400E; border:1px solid #FDE68A; }
+  .b-approved    { background:#ECFDF5; color:#065F46; border:1px solid #A7F3D0; }
+  .b-closed      { background:#F1F5F9; color:#475569; border:1px solid #E2E8F0; }
+
+  /* ── CGPA chip ── */
+  .cgpa-chip {
+    display:inline-flex; align-items:center;
+    font-size:13px; font-weight:600;
+    border-radius:6px; padding:.2rem .6rem;
+  }
+  .cgpa-high { background:#ECFDF5; color:#065F46; }
+  .cgpa-mid  { background:#EFF6FF; color:#1E40AF; }
+  .cgpa-low  { background:#FEF2F2; color:#991B1B; }
+
+  /* ── BRANCH / YEAR tags ── */
+  .tag {
+    display: inline-flex; align-items: center;
+    font-size: 12px; color: var(--mid);
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 5px; padding: .15rem .5rem;
+  }
+
+  /* ── SKILLS ── */
+  .skills-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
+  .skill-pill {
+    font-size: 12px; padding: .25rem .65rem;
+    background: var(--blue-lt); color: var(--blue);
+    border: 1px solid #BFDBFE; border-radius: 20px;
+  }
+
+  /* ── REMARKS BOX ── */
+  .remarks-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: .85rem 1rem;
+    font-size: 13px; color: var(--mid); line-height: 1.6;
+    font-style: italic;
+  }
+
+  /* ── STATUS UPDATE FORM ── */
+  .form-label {
+    display: block; font-size: 13px; font-weight: 500;
+    color: var(--mid); margin-bottom: .35rem;
+  }
+  .form-control, .form-select {
+    width: 100%; border: 1px solid var(--border);
+    border-radius: 8px; font-size: 14px;
+    padding: .5rem .85rem;
+    color: var(--dark); background: var(--white);
+    transition: border-color .15s, box-shadow .15s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .form-control:focus, .form-select:focus {
+    outline: none; border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+  }
+  textarea.form-control { resize: vertical; min-height: 80px; line-height: 1.6; }
+  .form-group { margin-bottom: 1rem; }
+
+  /* ── ACTION ROW ── */
+  .action-row {
+    display: flex; gap: 10px; align-items: center;
+    padding: 1.1rem 1.4rem;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .btn-save {
+    background: var(--blue); color: #fff;
+    border: none; border-radius: 9px;
+    padding: .55rem 1.4rem; font-size: 14px; font-weight: 500;
+    cursor: pointer; transition: background .15s;
+    font-family: 'DM Sans', sans-serif;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-save:hover { background: var(--blue-dk); }
+  .btn-cancel {
+    background: var(--white); color: var(--mid);
+    border: 1px solid var(--border); border-radius: 9px;
+    padding: .55rem 1.1rem; font-size: 14px; font-weight: 500;
+    text-decoration: none; transition: all .15s;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-cancel:hover { border-color: var(--mid); color: var(--dark); }
+
+  /* ── RESUME BUTTON ── */
+  .resume-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 13px; font-weight: 500;
+    color: var(--blue); background: var(--blue-lt);
+    border: 1px solid #BFDBFE; border-radius: 8px;
+    padding: .4rem .9rem; text-decoration: none;
+    transition: all .15s;
+  }
+  .resume-btn:hover { background: var(--blue); color: #fff; border-color: var(--blue); }
+
+  /* ── INFO NOTE (sidebar) ── */
+  .info-note {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1rem 1.1rem;
+    font-size: 13px; color: var(--mid); line-height: 1.6;
+    margin-bottom: 1rem;
+  }
+  .info-note strong { color: var(--dark); }
+  .info-note i { color: var(--blue); margin-right: 5px; }
+
+  /* ── DRIVE SNAPSHOT (sidebar) ── */
+  .drive-snapshot {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1rem; margin-bottom: 1rem;
+  }
+  .ds-row {
+    display: flex; justify-content: space-between;
+    font-size: 13px; padding: .35rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .ds-row:last-child { border-bottom: none; }
+  .ds-row .ds-label { color: var(--light); }
+  .ds-row .ds-val   { font-weight: 500; color: var(--dark); text-align: right; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- HERO -->
+<div class="page-hero">
+  <div class="container-fluid px-4">
+    <a href="{{ url_for('company.drive_applications', drive_id=drive.id) }}"
+       style="font-size:13px;color:var(--mid);text-decoration:none;
+              display:inline-flex;align-items:center;gap:5px;margin-bottom:.75rem">
+      <i class="bi bi-arrow-left"></i> Back to Applicants
+    </a>
+    <h1>Application Detail</h1>
+    <p>
+      Reviewing <strong>{{ application.student_name }}</strong>
+      for <strong>{{ drive.job_role }}</strong>
+    </p>
+  </div>
+</div>
+
+<div class="container-fluid px-4 pb-4">
+  <div class="detail-layout">
+
+    <!-- ── LEFT: MAIN CONTENT ── -->
+    <div>
+
+      <!-- Student Profile -->
+      <div class="section-card">
+        <div class="sc-header">
+          <div class="sc-icon"><i class="bi bi-person"></i></div>
+          <h2>Student Profile</h2>
+        </div>
+
+        <!-- Avatar + name block -->
+        <div class="student-header">
+          <div class="stu-avatar-lg">{{ application.student_name[0]|upper }}</div>
+          <div>
+            <div class="stu-name">{{ application.student_name }}</div>
+            <div class="stu-email">{{ application.student_email }}</div>
+            <span class="stu-id">{{ application.student_id }}</span>
+          </div>
+        </div>
+
+        <div class="sc-body" style="padding-top:.75rem">
+          <div class="info-row">
+            <span class="ir-label">Branch</span>
+            <span class="ir-val"><span class="tag">{{ application.branch }}</span></span>
+          </div>
+          <div class="info-row">
+            <span class="ir-label">Year</span>
+            <span class="ir-val"><span class="tag">Year {{ application.year }}</span></span>
+          </div>
+          <div class="info-row">
+            <span class="ir-label">CGPA</span>
+            <span class="ir-val">
+              <span class="cgpa-chip
+                {% if application.cgpa >= 8.0 %}cgpa-high
+                {% elif application.cgpa >= 6.0 %}cgpa-mid
+                {% else %}cgpa-low{% endif %}">
+                {{ application.cgpa }}
+              </span>
+            </span>
+          </div>
+          <div class="info-row">
+            <span class="ir-label">Phone</span>
+            <span class="ir-val">{{ application.phone or '—' }}</span>
+          </div>
+          <div class="info-row">
+            <span class="ir-label">Resume</span>
+            <span class="ir-val">
+              {% if application.resume_path %}
+              <a href="/{{ application.resume_path }}" target="_blank" class="resume-btn">
+                <i class="bi bi-file-earmark-arrow-down"></i> Download CV
+              </a>
+              {% else %}
+              <span style="color:var(--light);font-size:13px">Not uploaded</span>
+              {% endif %}
+            </span>
+          </div>
+
+          {% if application.skills %}
+          <div class="info-row" style="align-items:flex-start">
+            <span class="ir-label">Skills</span>
+            <div class="skills-wrap" style="justify-content:flex-end">
+              {% for skill in application.skills.split(',') %}
+              <span class="skill-pill">{{ skill.strip() }}</span>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Application Info -->
+      <div class="section-card">
+        <div class="sc-header">
+          <div class="sc-icon"><i class="bi bi-send"></i></div>
+          <h2>Application Info</h2>
+        </div>
+        <div class="sc-body">
+          <div class="info-row">
+            <span class="ir-label">Applied On</span>
+            <span class="ir-val">
+              {{ application.applied_at.strftime('%d %b %Y, %I:%M %p') if application.applied_at else '—' }}
+            </span>
+          </div>
+          <div class="info-row">
+            <span class="ir-label">Current Status</span>
+            <span class="ir-val">
+              <span class="badge b-{{ application.status }}">
+                {% if application.status == 'applied' %}<i class="bi bi-send"></i>
+                {% elif application.status == 'shortlisted' %}<i class="bi bi-list-check"></i>
+                {% elif application.status == 'selected' %}<i class="bi bi-trophy"></i>
+                {% else %}<i class="bi bi-x-circle"></i>{% endif %}
+                {{ application.status|capitalize }}
+              </span>
+            </span>
+          </div>
+
+          {% if application.remarks %}
+          <div class="info-row" style="align-items:flex-start; flex-direction:column; gap:.5rem">
+            <span class="ir-label">Remarks</span>
+            <div class="remarks-box w-100">{{ application.remarks }}</div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Update Status -->
+      <div class="section-card">
+        <div class="sc-header">
+          <div class="sc-icon"><i class="bi bi-pencil-square"></i></div>
+          <h2>Update Status</h2>
+        </div>
+        <form method="POST"
+              action="{{ url_for('company.update_application_status', application_id=application.id) }}">
+          <div class="sc-body">
+            <div class="form-group">
+              <label class="form-label">New Status</label>
+              <select name="status" class="form-select">
+                {% for s in ['applied', 'shortlisted', 'selected', 'rejected'] %}
+                <option value="{{ s }}" {% if application.status == s %}selected{% endif %}>
+                  {{ s|capitalize }}
+                </option>
+                {% endfor %}
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Remarks <span style="color:var(--light);font-weight:400">(optional)</span></label>
+              <textarea name="remarks" class="form-control"
+                        placeholder="Add a note for this status update…">{{ application.remarks or '' }}</textarea>
+            </div>
+          </div>
+          <div class="action-row">
+            <button type="submit" class="btn-save">
+              <i class="bi bi-check-lg"></i> Update Status
+            </button>
+            <a href="{{ url_for('company.drive_applications', drive_id=drive.id) }}"
+               class="btn-cancel">Cancel</a>
+          </div>
+        </form>
+      </div>
+
+    </div>
+
+    <!-- ── RIGHT: SIDEBAR ── -->
+    <div class="sidebar-col">
+
+      <!-- Drive snapshot -->
+      <div class="section-card" style="margin-bottom:1rem">
+        <div class="sc-header">
+          <div class="sc-icon"><i class="bi bi-briefcase"></i></div>
+          <h2>Drive Info</h2>
+        </div>
+        <div class="sc-body" style="padding:1rem">
+          <div class="drive-snapshot">
+            <div class="ds-row">
+              <span class="ds-label">Job Role</span>
+              <span class="ds-val">{{ drive.job_role }}</span>
+            </div>
+            <div class="ds-row">
+              <span class="ds-label">Type</span>
+              <span class="ds-val">{{ drive.job_type.replace('_',' ')|title }}</span>
+            </div>
+            <div class="ds-row">
+              <span class="ds-label">Status</span>
+              <span class="ds-val">
+                <span class="badge b-{{ drive.status }}">{{ drive.status|capitalize }}</span>
+              </span>
+            </div>
+            {% if drive.location %}
+            <div class="ds-row">
+              <span class="ds-label">Location</span>
+              <span class="ds-val">{{ drive.location }}</span>
+            </div>
+            {% endif %}
+            {% if drive.salary_package %}
+            <div class="ds-row">
+              <span class="ds-label">Package</span>
+              <span class="ds-val">{{ drive.salary_package }}</span>
+            </div>
+            {% endif %}
+            <div class="ds-row">
+              <span class="ds-label">Deadline</span>
+              <span class="ds-val">{{ drive.application_deadline }}</span>
+            </div>
+            <div class="ds-row">
+              <span class="ds-label">Min CGPA</span>
+              <span class="ds-val">{{ drive.eligibility_cgpa }}</span>
+            </div>
+          </div>
+          <a href="{{ url_for('company.drive_applications', drive_id=drive.id) }}"
+             style="font-size:13px;color:var(--blue);text-decoration:none;
+                    display:inline-flex;align-items:center;gap:5px">
+            <i class="bi bi-people"></i> View all applicants
+          </a>
+        </div>
+      </div>
+
+      <!-- Status guide -->
+      <div class="info-note">
+        <i class="bi bi-info-circle"></i>
+        <strong>Status Guide</strong>
+        <ul style="margin:.5rem 0 0;padding-left:1.1rem;line-height:2">
+          <li><strong>Applied</strong> — awaiting review</li>
+          <li><strong>Shortlisted</strong> — selected for interview</li>
+          <li><strong>Selected</strong> — offer extended</li>
+          <li><strong>Rejected</strong> — not moving forward</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

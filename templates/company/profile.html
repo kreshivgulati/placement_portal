@@ -1,0 +1,364 @@
+{% extends 'base.html' %}
+{% block title %}Company Profile — PlacementPlus{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ── HERO ── */
+  .profile-hero {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 2.5rem 0 0;
+    margin-bottom: 0;
+  }
+  .hero-inner {
+    display: flex; align-items: flex-end;
+    gap: 1.5rem; padding: 0 2rem 0;
+    flex-wrap: wrap;
+  }
+  .company-avatar {
+    width: 80px; height: 80px; border-radius: 20px;
+    background: var(--blue-lt); color: var(--blue);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 32px;
+    border: 3px solid var(--white);
+    flex-shrink: 0;
+    box-shadow: 0 2px 12px rgba(37,99,235,.15);
+  }
+  .hero-meta { flex: 1; min-width: 0; padding-bottom: 1.5rem; }
+  .hero-meta h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.8rem; font-weight: 400;
+    margin-bottom: .25rem; line-height: 1.2;
+  }
+  .hero-meta p { color: var(--mid); font-size: 14px; margin: 0; }
+  .hero-actions { padding-bottom: 1.5rem; display: flex; gap: 8px; align-items: center; }
+
+  /* ── TABS ── */
+  .profile-tabs {
+    border-bottom: 1px solid var(--border);
+    display: flex; gap: 0;
+    padding: 0 2rem;
+    background: var(--white);
+    margin-bottom: 2rem;
+  }
+  .profile-tab {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: .85rem 1.1rem;
+    font-size: 14px; font-weight: 500;
+    color: var(--mid); text-decoration: none;
+    border-bottom: 2px solid transparent;
+    transition: all .15s; white-space: nowrap;
+  }
+  .profile-tab:hover { color: var(--blue); }
+  .profile-tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+
+  /* ── SECTION CARDS ── */
+  .section-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 14px; overflow: hidden;
+    margin-bottom: 1.25rem;
+  }
+  .section-card .sc-header {
+    padding: 1rem 1.4rem;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: between;
+    gap: 8px;
+  }
+  .section-card .sc-header h2 {
+    font-size: 14px; font-weight: 600;
+    color: var(--dark); margin: 0; flex: 1;
+  }
+  .section-card .sc-body { padding: 1.4rem; }
+
+  /* info grid */
+  .info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 1.25rem;
+  }
+  .info-item .ii-label {
+    font-size: 11px; color: var(--light);
+    text-transform: uppercase; letter-spacing: .05em;
+    margin-bottom: .35rem;
+  }
+  .info-item .ii-val {
+    font-size: 14px; color: var(--dark); font-weight: 500;
+    word-break: break-word;
+  }
+  .info-item .ii-val.muted { color: var(--mid); font-weight: 400; }
+  .info-item .ii-val a { color: var(--blue); text-decoration: none; }
+  .info-item .ii-val a:hover { text-decoration: underline; }
+
+  /* status badges */
+  .badge { font-weight:500; font-size:11px; padding:.35em .75em; border-radius:6px; display:inline-flex; align-items:center; gap:4px; }
+  .b-pending   { background:#FFFBEB; color:#92400E; border:1px solid #FDE68A; }
+  .b-approved  { background:#ECFDF5; color:#065F46; border:1px solid #A7F3D0; }
+  .b-rejected  { background:#FEF2F2; color:#991B1B; border:1px solid #FECACA; }
+  .b-active    { background:#ECFDF5; color:#065F46; border:1px solid #A7F3D0; }
+  .b-blacklisted { background:#FEF2F2; color:#991B1B; border:1px solid #FECACA; }
+
+  /* hr contact card */
+  .contact-card {
+    display: flex; align-items: center; gap: 1rem;
+    padding: 1rem; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 12px;
+  }
+  .contact-avatar {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: var(--blue-lt); color: var(--blue);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 16px; flex-shrink: 0;
+  }
+  .contact-info .ci-name { font-weight: 600; font-size: 14px; }
+  .contact-info .ci-role { font-size: 12px; color: var(--mid); }
+  .contact-detail {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 13px; color: var(--mid); margin-top: 2px;
+  }
+  .contact-detail i { color: var(--light); font-size: 12px; }
+
+  /* approval status banner */
+  .status-banner {
+    border-radius: 12px; padding: .85rem 1.2rem;
+    display: flex; align-items: center; gap: 10px;
+    font-size: 14px; margin-bottom: 1.25rem;
+  }
+  .status-banner.pending  { background:#FFFBEB; border:1px solid #FDE68A; color:#92400E; }
+  .status-banner.approved { background:#ECFDF5; border:1px solid #A7F3D0; color:#065F46; }
+  .status-banner.rejected { background:#FEF2F2; border:1px solid #FECACA; color:#991B1B; }
+  .status-banner i { font-size: 18px; flex-shrink: 0; }
+
+  /* description block */
+  .desc-block {
+    font-size: 14px; color: var(--mid);
+    line-height: 1.75; white-space: pre-wrap;
+  }
+
+  /* website link button */
+  .website-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: .4rem .9rem; border-radius: 8px;
+    border: 1px solid var(--border); background: var(--white);
+    color: var(--blue); font-size: 13px; font-weight: 500;
+    text-decoration: none; transition: all .15s;
+  }
+  .website-btn:hover { border-color: var(--blue); background: var(--blue-lt); }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- PROFILE HERO -->
+<div class="profile-hero">
+  <div class="hero-inner">
+    <div class="company-avatar">{{ company.company_name[0]|upper }}</div>
+
+    <div class="hero-meta">
+      <h1>{{ company.company_name }}</h1>
+      <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap">
+        <p>{{ company.industry or 'No industry specified' }}</p>
+        <span class="badge b-{{ company.approval_status }}">
+          {% if company.approval_status == 'approved' %}<i class="bi bi-check-circle-fill"></i>
+          {% elif company.approval_status == 'pending' %}<i class="bi bi-hourglass-split"></i>
+          {% else %}<i class="bi bi-x-circle-fill"></i>{% endif %}
+          {{ company.approval_status|capitalize }}
+        </span>
+        <span class="badge b-{{ company.account_status }}">
+          {{ company.account_status|capitalize }}
+        </span>
+      </div>
+    </div>
+
+    <div class="hero-actions">
+      {% if company.website %}
+      <a href="{{ company.website }}" target="_blank" class="website-btn">
+        <i class="bi bi-box-arrow-up-right"></i> Visit Website
+      </a>
+      {% endif %}
+      <a href="{{ url_for('company.edit_profile') }}" class="btn btn-primary btn-sm"
+         style="display:flex;align-items:center;gap:5px">
+        <i class="bi bi-pencil"></i> Edit Profile
+      </a>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="profile-tabs">
+    <a href="#overview"  class="profile-tab active">Overview</a>
+    <a href="#hr"        class="profile-tab">HR Contact</a>
+    <a href="#about"     class="profile-tab">About</a>
+  </div>
+</div>
+
+<div class="container-fluid px-4">
+
+  <!-- APPROVAL STATUS BANNER -->
+  {% if company.approval_status == 'pending' %}
+  <div class="status-banner pending">
+    <i class="bi bi-hourglass-split"></i>
+    <div>
+      <strong>Awaiting Admin Approval</strong>
+      <div style="font-size:13px;margin-top:2px">
+        Your company is pending review. You cannot create placement drives until approved.
+      </div>
+    </div>
+  </div>
+  {% elif company.approval_status == 'rejected' %}
+  <div class="status-banner rejected">
+    <i class="bi bi-x-circle-fill"></i>
+    <div>
+      <strong>Registration Rejected</strong>
+      <div style="font-size:13px;margin-top:2px">
+        Your registration was rejected. Please contact the placement cell for more information.
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="row g-4">
+
+    <!-- LEFT COLUMN -->
+    <div class="col-lg-8">
+
+      <!-- Overview -->
+      <div class="section-card" id="overview">
+        <div class="sc-header">
+          <h2><i class="bi bi-building me-2" style="color:var(--blue)"></i>Company Details</h2>
+        </div>
+        <div class="sc-body">
+          <div class="info-grid">
+            <div class="info-item">
+              <div class="ii-label">Company Name</div>
+              <div class="ii-val">{{ company.company_name }}</div>
+            </div>
+            <div class="info-item">
+              <div class="ii-label">Industry</div>
+              <div class="ii-val {% if not company.industry %}muted{% endif %}">
+                {{ company.industry or 'Not specified' }}
+              </div>
+            </div>
+            <div class="info-item">
+              <div class="ii-label">Website</div>
+              <div class="ii-val">
+                {% if company.website %}
+                <a href="{{ company.website }}" target="_blank">
+                  <i class="bi bi-box-arrow-up-right me-1" style="font-size:11px"></i>
+                  {{ company.website }}
+                </a>
+                {% else %}
+                <span class="muted">Not provided</span>
+                {% endif %}
+              </div>
+            </div>
+            <div class="info-item">
+              <div class="ii-label">Login Email</div>
+              <div class="ii-val">{{ company.email }}</div>
+            </div>
+            <div class="info-item">
+              <div class="ii-label">Account Status</div>
+              <div class="ii-val">
+                <span class="badge b-{{ company.account_status }}">
+                  {{ company.account_status|capitalize }}
+                </span>
+              </div>
+            </div>
+            <div class="info-item">
+              <div class="ii-label">Registered On</div>
+              <div class="ii-val muted">
+                {{ company.created_at.strftime('%Y-%m-%d') if company.created_at else '—' }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- About -->
+      {% if company.description %}
+      <div class="section-card" id="about">
+        <div class="sc-header">
+          <h2><i class="bi bi-file-text me-2" style="color:var(--blue)"></i>About the Company</h2>
+        </div>
+        <div class="sc-body">
+          <p class="desc-block">{{ company.description }}</p>
+        </div>
+      </div>
+      {% endif %}
+
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="col-lg-4">
+
+      <!-- HR Contact -->
+      <div class="section-card" id="hr">
+        <div class="sc-header">
+          <h2><i class="bi bi-person-badge me-2" style="color:var(--blue)"></i>HR Contact</h2>
+          <a href="{{ url_for('company.edit_profile') }}"
+             style="font-size:12px;color:var(--blue);text-decoration:none;margin-left:auto">
+            Edit
+          </a>
+        </div>
+        <div class="sc-body">
+          {% if company.hr_contact_name %}
+          <div class="contact-card">
+            <div class="contact-avatar">
+              {{ company.hr_contact_name[0]|upper }}
+            </div>
+            <div class="contact-info">
+              <div class="ci-name">{{ company.hr_contact_name }}</div>
+              <div class="ci-role">HR Manager</div>
+              {% if company.hr_contact_email %}
+              <div class="contact-detail">
+                <i class="bi bi-envelope"></i>
+                {{ company.hr_contact_email }}
+              </div>
+              {% endif %}
+              {% if company.hr_contact_phone %}
+              <div class="contact-detail">
+                <i class="bi bi-telephone"></i>
+                {{ company.hr_contact_phone }}
+              </div>
+              {% endif %}
+            </div>
+          </div>
+          {% else %}
+          <div style="text-align:center;padding:1.5rem;color:var(--light);font-size:14px">
+            <i class="bi bi-person-x" style="font-size:2rem;display:block;margin-bottom:.5rem"></i>
+            No HR contact added yet.
+            <a href="{{ url_for('company.edit_profile') }}"
+               style="color:var(--blue);display:block;margin-top:.5rem">
+              Add contact
+            </a>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Quick actions -->
+      <div class="section-card">
+        <div class="sc-header">
+          <h2><i class="bi bi-lightning me-2" style="color:var(--blue)"></i>Quick Actions</h2>
+        </div>
+        <div class="sc-body d-grid gap-2">
+          {% if company.approval_status == 'approved' %}
+          <a href="{{ url_for('company.create_drive') }}"
+             class="btn btn-primary" style="display:flex;align-items:center;gap:6px">
+            <i class="bi bi-plus-lg"></i> Create New Drive
+          </a>
+          {% endif %}
+          <a href="{{ url_for('company.drives') }}"
+             class="btn btn-outline-primary" style="display:flex;align-items:center;gap:6px">
+            <i class="bi bi-briefcase"></i> View My Drives
+          </a>
+          <a href="{{ url_for('company.edit_profile') }}"
+             class="btn btn-outline-secondary" style="display:flex;align-items:center;gap:6px">
+            <i class="bi bi-pencil"></i> Edit Profile
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

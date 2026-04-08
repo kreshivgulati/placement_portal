@@ -1,0 +1,142 @@
+{% extends 'base.html' %}
+{% block title %}Admin Dashboard — PlacementPlus{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+
+  <div class="pg-header d-flex align-items-center justify-content-between">
+    <div>
+      <h1>Dashboard</h1>
+      <p>Overview of all placement activity</p>
+    </div>
+    <span class="badge b-approved" style="font-size:12px;padding:.5em .9em">
+      <i class="bi bi-shield-check me-1"></i>Admin
+    </span>
+  </div>
+
+  <!-- STAT CARDS -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+      <div class="stat-card">
+        <div class="stat-icon si-blue"><i class="bi bi-people"></i></div>
+        <div>
+          <div class="stat-label">Students</div>
+          <div class="stat-val">{{ student_count }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="stat-card">
+        <div class="stat-icon si-green"><i class="bi bi-building"></i></div>
+        <div>
+          <div class="stat-label">Companies</div>
+          <div class="stat-val">{{ company_count }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="stat-card">
+        <div class="stat-icon si-amber"><i class="bi bi-briefcase"></i></div>
+        <div>
+          <div class="stat-label">Drives</div>
+          <div class="stat-val">{{ drive_count }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="stat-card">
+        <div class="stat-icon si-purple"><i class="bi bi-file-earmark-text"></i></div>
+        <div>
+          <div class="stat-label">Applications</div>
+          <div class="stat-val">{{ app_count }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PENDING APPROVALS -->
+  {% if pending_companies > 0 or pending_drives > 0 %}
+  <div class="row g-3 mb-4">
+    {% if pending_companies > 0 %}
+    <div class="col-md-6">
+      <div class="card border-warning" style="border-color:#FDE68A !important">
+        <div class="card-body d-flex align-items-center justify-content-between">
+          <div>
+            <div style="font-size:13px;color:var(--amber);font-weight:500">
+              <i class="bi bi-exclamation-triangle me-1"></i>Pending Company Approvals
+            </div>
+            <div style="font-size:1.5rem;font-weight:600">{{ pending_companies }}</div>
+          </div>
+          <a href="{{ url_for('admin.companies') }}" class="btn btn-sm btn-warning text-white">Review</a>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+    {% if pending_drives > 0 %}
+    <div class="col-md-6">
+      <div class="card border-warning" style="border-color:#FDE68A !important">
+        <div class="card-body d-flex align-items-center justify-content-between">
+          <div>
+            <div style="font-size:13px;color:var(--amber);font-weight:500">
+              <i class="bi bi-exclamation-triangle me-1"></i>Pending Drive Approvals
+            </div>
+            <div style="font-size:1.5rem;font-weight:600">{{ pending_drives }}</div>
+          </div>
+          <a href="{{ url_for('admin.drives') }}?status=pending" class="btn btn-sm btn-warning text-white">Review</a>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <!-- RECENT APPLICATIONS -->
+  <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      Recent Applications
+      <a href="{{ url_for('admin.applications') }}" style="font-size:13px;color:var(--blue);text-decoration:none">
+        View all <i class="bi bi-arrow-right"></i>
+      </a>
+    </div>
+    {% if recent_applications %}
+    <div class="table-responsive">
+      <table class="table mb-0">
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>Drive</th>
+            <th>Company</th>
+            <th>Status</th>
+            <th>Applied</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for app in recent_applications %}
+          <tr>
+            <td>
+              <div style="font-weight:500">{{ app.student_name }}</div>
+              <div style="font-size:12px;color:var(--light)">{{ app.student_id }}</div>
+            </td>
+            <td>{{ app.job_title }}</td>
+            <td>{{ app.company_name }}</td>
+            <td>
+              <span class="badge b-{{ app.status }}">{{ app.status|capitalize }}</span>
+            </td>
+            <td style="color:var(--light);font-size:13px">
+              {{ app.applied_at.strftime('%Y-%m-%d') if app.applied_at else '—' }}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <i class="bi bi-inbox"></i>
+      <p>No applications yet</p>
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}

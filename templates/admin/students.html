@@ -1,0 +1,475 @@
+{% extends 'base.html' %}
+{% block title %}Students — Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ── HERO ── */
+  .page-hero {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 2.2rem 0 1.8rem;
+    margin-bottom: 2rem;
+  }
+  .page-hero h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.9rem; font-weight: 400; margin-bottom: .3rem;
+  }
+  .page-hero p { color: var(--mid); font-size: 14px; }
+
+  /* ── SUMMARY STRIP ── */
+  .summary-strip {
+    display: flex; gap: 1rem; flex-wrap: wrap;
+    margin-bottom: 1.75rem;
+  }
+  .sum-pill {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 12px; padding: .85rem 1.1rem;
+    display: flex; align-items: center; gap: 10px;
+    flex: 1; min-width: 120px;
+  }
+  .sicon {
+    width: 36px; height: 36px; border-radius: 9px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; flex-shrink: 0;
+  }
+  .si-blue   { background:#EFF6FF; color:var(--blue); }
+  .si-green  { background:#ECFDF5; color:#10B981; }
+  .si-red    { background:#FEF2F2; color:#EF4444; }
+  .si-amber  { background:#FFFBEB; color:#F59E0B; }
+  .slabel { font-size:11px; color:var(--light); text-transform:uppercase; letter-spacing:.05em; }
+  .sval   { font-size:1.25rem; font-weight:600; color:var(--dark); line-height:1.2; }
+
+  /* ── FILTER BAR ── */
+  .filter-bar {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 14px; padding: 1rem 1.25rem;
+    display: flex; align-items: center;
+    gap: 1rem; flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+  }
+  .search-box { flex:1; min-width:240px; position:relative; }
+  .search-box .bi-search {
+    position:absolute; left:12px; top:50%;
+    transform:translateY(-50%);
+    color:var(--light); font-size:14px; pointer-events:none;
+  }
+  .search-box input {
+    padding-left:2.2rem; border:1px solid var(--border);
+    border-radius:8px; font-size:14px;
+    height:38px; width:100%;
+    background:var(--surface); color:var(--dark);
+    transition:border-color .15s, box-shadow .15s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .search-box input:focus {
+    outline:none; border-color:var(--blue);
+    box-shadow:0 0 0 3px rgba(37,99,235,.1);
+    background:var(--white);
+  }
+  .filter-select {
+    height: 38px; border: 1px solid var(--border);
+    border-radius: 8px; font-size: 13px; font-weight: 500;
+    padding: 0 .85rem; color: var(--mid);
+    background: var(--white); cursor: pointer;
+    transition: border-color .15s;
+    font-family: 'DM Sans', sans-serif;
+    min-width: 120px;
+  }
+  .filter-select:focus { outline:none; border-color:var(--blue); }
+  .fpill {
+    display:inline-flex; align-items:center; gap:5px;
+    padding:.35rem .85rem; border-radius:20px;
+    font-size:13px; font-weight:500;
+    border:1px solid var(--border);
+    background:var(--white); color:var(--mid);
+    text-decoration:none; transition:all .15s; white-space:nowrap;
+  }
+  .fpill:hover { border-color:var(--blue); color:var(--blue); }
+  .fpill.active { background:var(--blue); border-color:var(--blue); color:#fff; }
+
+  /* ── TABLE CARD ── */
+  .table-card {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 14px; overflow: hidden;
+  }
+  .table-card .table {
+    margin: 0; font-size: 14px; border-collapse: collapse;
+  }
+  .table-card .table thead th {
+    background: var(--surface); color: var(--light);
+    font-weight: 500; font-size: 11px;
+    text-transform: uppercase; letter-spacing: .06em;
+    border-bottom: 1px solid var(--border);
+    padding: .8rem 1.1rem;
+    white-space: nowrap;
+  }
+  .table-card .table thead th.sortable {
+    cursor: pointer; user-select: none;
+  }
+  .table-card .table thead th.sortable:hover { color: var(--blue); }
+  .table-card .table tbody td {
+    padding: .85rem 1.1rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .table-card .table tbody tr:last-child td { border-bottom: none; }
+  .table-card .table tbody tr {
+    transition: background .12s;
+    animation: fadeIn .25s ease both;
+  }
+  .table-card .table tbody tr:hover { background: var(--surface); }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+  /* student avatar */
+  .stu-avatar {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: var(--blue-lt); color: var(--blue);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 13px; flex-shrink: 0;
+  }
+  .stu-avatar.blacklisted {
+    background: #FEF2F2; color: #EF4444;
+  }
+
+  /* badges */
+  .badge {
+    font-weight: 500; font-size: 11px;
+    padding: .32em .68em; border-radius: 6px; display: inline-block;
+  }
+  .b-active       { background:#ECFDF5; color:#065F46; border:1px solid #A7F3D0; }
+  .b-blacklisted  { background:#FEF2F2; color:#991B1B; border:1px solid #FECACA; }
+  .b-deactivated  { background:#F1F5F9; color:#475569; border:1px solid #E2E8F0; }
+
+  /* CGPA chip */
+  .cgpa-chip {
+    display: inline-flex; align-items: center;
+    font-size: 12px; font-weight: 600;
+    border-radius: 5px; padding: .15rem .5rem;
+  }
+  .cgpa-high { background:#ECFDF5; color:#065F46; }
+  .cgpa-mid  { background:#EFF6FF; color:#1E40AF; }
+  .cgpa-low  { background:#FEF2F2; color:#991B1B; }
+
+  /* branch tag */
+  .branch-tag {
+    display: inline-flex; align-items: center;
+    font-size: 11px; color: var(--mid);
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 5px; padding: .15rem .5rem;
+  }
+
+  /* action icons */
+  .btn-icon {
+    width: 30px; height: 30px; border-radius: 7px;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 13px; border: 1px solid var(--border);
+    background: var(--white); color: var(--mid);
+    text-decoration: none; cursor: pointer;
+    transition: all .15s;
+  }
+  .btn-icon:hover        { border-color:var(--blue);  color:var(--blue);  background:var(--blue-lt); }
+  .btn-icon.success:hover{ border-color:#10B981; color:#10B981; background:#ECFDF5; }
+  .btn-icon.danger:hover { border-color:#EF4444; color:#EF4444; background:#FEF2F2; }
+  .btn-icon.warn:hover   { border-color:#F59E0B; color:#F59E0B; background:#FFFBEB; }
+  .action-cell { display:flex; align-items:center; gap:5px; }
+  .action-cell form { margin:0; }
+
+  /* results meta */
+  .results-meta { font-size:13px; color:var(--light); margin-bottom:1rem; }
+
+  /* empty state */
+  .empty-state { text-align:center; padding:5rem 2rem; }
+  .empty-icon {
+    width:72px; height:72px;
+    background:var(--surface); border:1px solid var(--border);
+    border-radius:18px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:28px; color:var(--light);
+    margin:0 auto 1.25rem;
+  }
+  .empty-state h3 { font-size:1rem; font-weight:600; margin-bottom:.4rem; }
+  .empty-state p  { font-size:14px; color:var(--light); }
+
+  /* blacklisted row dimmed */
+  tr.row-blacklisted td { opacity: .6; }
+  tr.row-blacklisted:hover td { opacity: 1; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- HERO -->
+<div class="page-hero">
+  <div class="container-fluid px-4">
+    <h1>Students</h1>
+    <p>Search, view and manage all registered students</p>
+  </div>
+</div>
+
+<div class="container-fluid px-4">
+
+  <!-- SUMMARY STRIP -->
+  {% set total      = students|length %}
+  {% set n_active   = students|selectattr('account_status','equalto','active')     |list|length %}
+  {% set n_black    = students|selectattr('account_status','equalto','blacklisted')|list|length %}
+
+  <div class="summary-strip">
+    <div class="sum-pill">
+      <div class="sicon si-blue"><i class="bi bi-people"></i></div>
+      <div><div class="slabel">Total Students</div><div class="sval">{{ total }}</div></div>
+    </div>
+    <div class="sum-pill">
+      <div class="sicon si-green"><i class="bi bi-person-check"></i></div>
+      <div><div class="slabel">Active</div><div class="sval">{{ n_active }}</div></div>
+    </div>
+    <div class="sum-pill">
+      <div class="sicon si-red"><i class="bi bi-slash-circle"></i></div>
+      <div><div class="slabel">Blacklisted</div><div class="sval">{{ n_black }}</div></div>
+    </div>
+    <div class="sum-pill">
+      <div class="sicon si-amber"><i class="bi bi-mortarboard"></i></div>
+      <div>
+        <div class="slabel">Avg CGPA</div>
+        <div class="sval">
+          {% if students %}
+            {{ "%.2f"|format(students|map(attribute='cgpa')|list|sum / total) }}
+          {% else %}—{% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FILTER + SEARCH BAR -->
+  <form method="GET" action="{{ url_for('admin.students') }}">
+    <div class="filter-bar">
+
+      <!-- Search input -->
+      <div class="search-box">
+        <i class="bi bi-search"></i>
+        <input type="text" name="search"
+               value="{{ search }}"
+               placeholder="Search by name, student ID, email or phone…"/>
+      </div>
+
+     <!-- Branch filter -->
+<select name="branch" class="filter-select" onchange="this.form.submit()">
+  <option value="">All Branches</option>
+  {% for b in ['CSE','ECE','IT','ME','CE','EE','Other'] %}
+  <option value="{{ b }}"
+    {% if request.args.get('branch') == b %}selected{% endif %}>
+    {{ b }}
+  </option>
+  {% endfor %}
+</select>
+
+<!-- Year filter -->
+<select name="year" class="filter-select" onchange="this.form.submit()">
+  <option value="">All Years</option>
+  {% for y in [1,2,3,4] %}
+  <option value="{{ y }}"
+    {% if request.args.get('year') == y|string %}selected{% endif %}>
+    Year {{ y }}
+  </option>
+  {% endfor %}
+</select>
+
+      <!-- Status filter pills -->
+      <div class="d-flex gap-2 flex-wrap">
+        <a href="{{ url_for('admin.students') }}{% if search %}?search={{ search }}{% endif %}"
+           class="fpill {% if not request.args.get('status') %}active{% endif %}">
+          All
+        </a>
+        <a href="?status=active{% if search %}&search={{ search }}{% endif %}"
+           class="fpill {% if request.args.get('status') == 'active' %}active{% endif %}">
+          Active
+        </a>
+        <a href="?status=blacklisted{% if search %}&search={{ search }}{% endif %}"
+           class="fpill {% if request.args.get('status') == 'blacklisted' %}active{% endif %}">
+          Blacklisted
+        </a>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-sm"
+              style="height:38px;padding:0 1rem;flex-shrink:0">
+        Search
+      </button>
+
+      {% if search or request.args.get('branch') or request.args.get('year') or request.args.get('status') %}
+      <a href="{{ url_for('admin.students') }}"
+         class="btn btn-outline-secondary btn-sm"
+         style="height:38px;padding:0 .9rem;flex-shrink:0">
+        <i class="bi bi-x"></i> Clear
+      </a>
+      {% endif %}
+
+    </div>
+  </form>
+
+  <!-- RESULTS META -->
+  <div class="results-meta">
+    Showing <strong>{{ students|length }}</strong>
+    student{{ 's' if students|length != 1 }}
+    {% if search %} matching "<strong>{{ search }}</strong>"{% endif %}
+    {% if request.args.get('branch') %} · Branch: {{ request.args.get('branch') }}{% endif %}
+    {% if request.args.get('year') %} · Year {{ request.args.get('year') }}{% endif %}
+    {% if request.args.get('status') %} · {{ request.args.get('status')|capitalize }}{% endif %}
+  </div>
+
+  <!-- TABLE -->
+  {% if students %}
+  <div class="table-card">
+    <div class="table-responsive">
+      <table class="table mb-0">
+        <thead>
+          <tr>
+            <th style="width:26%">Student</th>
+            <th>Student ID</th>
+            <th>Branch</th>
+            <th>Year</th>
+            <th>CGPA</th>
+            <th>Phone</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in students %}
+          <tr class="{% if s.account_status == 'blacklisted' %}row-blacklisted{% endif %}">
+
+            <!-- Student name + email -->
+            <td>
+              <div class="d-flex align-items-center gap-2">
+                <div class="stu-avatar {% if s.account_status == 'blacklisted' %}blacklisted{% endif %}">
+                  {{ s.name[0]|upper }}
+                </div>
+                <div style="min-width:0">
+                  <div style="font-weight:600;font-size:14px;
+                              white-space:nowrap;overflow:hidden;
+                              text-overflow:ellipsis;max-width:160px">
+                    {{ s.name }}
+                  </div>
+                  <div style="font-size:12px;color:var(--light);
+                              white-space:nowrap;overflow:hidden;
+                              text-overflow:ellipsis;max-width:160px">
+                    {{ s.email }}
+                  </div>
+                </div>
+              </div>
+            </td>
+
+            <!-- Student ID -->
+            <td>
+              <span style="font-size:13px;font-family:monospace;
+                           background:var(--surface);border:1px solid var(--border);
+                           border-radius:5px;padding:.15rem .5rem;color:var(--mid)">
+                {{ s.student_id }}
+              </span>
+            </td>
+
+            <!-- Branch -->
+            <td><span class="branch-tag">{{ s.branch }}</span></td>
+
+            <!-- Year -->
+            <td style="font-size:13px;color:var(--mid)">{{ s.year }}</td>
+
+            <!-- CGPA with color coding -->
+            <td>
+              <span class="cgpa-chip
+                {% if s.cgpa >= 8.0 %}cgpa-high
+                {% elif s.cgpa >= 6.0 %}cgpa-mid
+                {% else %}cgpa-low{% endif %}">
+                {{ s.cgpa }}
+              </span>
+            </td>
+
+            <!-- Phone -->
+            <td style="font-size:13px;color:var(--mid)">
+              {{ s.phone or '—' }}
+            </td>
+
+            <!-- Status -->
+            <td>
+              <span class="badge b-{{ s.account_status }}">
+                {% if s.account_status == 'active' %}
+                  <i class="bi bi-check-circle-fill me-1"></i>Active
+                {% elif s.account_status == 'blacklisted' %}
+                  <i class="bi bi-slash-circle-fill me-1"></i>Blacklisted
+                {% else %}
+                  {{ s.account_status|capitalize }}
+                {% endif %}
+              </span>
+            </td>
+
+            <!-- Actions -->
+            <td>
+              <div class="action-cell">
+
+                <!-- View detail -->
+                <a href="{{ url_for('admin.student_detail', student_id=s.id) }}"
+                   class="btn-icon" title="View profile">
+                  <i class="bi bi-eye"></i>
+                </a>
+
+                <!-- Edit -->
+                <a href="{{ url_for('admin.edit_student', student_id=s.id) }}"
+                   class="btn-icon" title="Edit student">
+                  <i class="bi bi-pencil"></i>
+                </a>
+
+                <!-- Blacklist / Activate -->
+                {% if s.account_status == 'active' %}
+                <form method="POST"
+                      action="{{ url_for('admin.blacklist_student', student_id=s.id) }}"
+                      onsubmit="return confirm('Blacklist {{ s.name }}?')">
+                  <button type="submit" class="btn-icon danger"
+                          title="Blacklist student">
+                    <i class="bi bi-slash-circle"></i>
+                  </button>
+                </form>
+                {% else %}
+                <form method="POST"
+                      action="{{ url_for('admin.activate_student', student_id=s.id) }}">
+                  <button type="submit" class="btn-icon success"
+                          title="Re-activate student">
+                    <i class="bi bi-arrow-counterclockwise"></i>
+                  </button>
+                </form>
+                {% endif %}
+
+                <!-- Delete -->
+                <form method="POST"
+                      action="{{ url_for('admin.delete_student', student_id=s.id) }}"
+                      onsubmit="return confirm('Permanently delete {{ s.name }}? This cannot be undone.')">
+                  <button type="submit" class="btn-icon danger"
+                          title="Delete permanently">
+                    <i class="bi bi-trash3"></i>
+                  </button>
+                </form>
+
+              </div>
+            </td>
+
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon"><i class="bi bi-people"></i></div>
+    <h3>No students found</h3>
+    <p>
+      {% if search or request.args.get('branch') or request.args.get('year') or request.args.get('status') %}
+        Try clearing your filters.
+        <a href="{{ url_for('admin.students') }}" style="color:var(--blue)">Reset</a>
+      {% else %}
+        No students have registered yet.
+      {% endif %}
+    </p>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}

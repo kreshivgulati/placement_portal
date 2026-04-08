@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+{% block title %}Company Dashboard — PlacementPlus{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+  <div class="pg-header d-flex align-items-start justify-content-between">
+    <div>
+      <h1>{{ company.company_name }}</h1>
+      <p>{{ company.industry or 'Company Dashboard' }}</p>
+    </div>
+    <span class="badge b-{{ company.approval_status }}" style="font-size:12px;padding:.5em .9em">
+      {{ company.approval_status|capitalize }}
+    </span>
+  </div>
+
+  <!-- Stats -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+      <div class="stat-card">
+        <div class="stat-icon si-blue"><i class="bi bi-briefcase"></i></div>
+        <div>
+          <div class="stat-label">Total Drives</div>
+          <div class="stat-val">{{ total_drives }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="stat-card">
+        <div class="stat-icon si-amber"><i class="bi bi-people"></i></div>
+        <div>
+          <div class="stat-label">Applicants</div>
+          <div class="stat-val">{{ total_applicants }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="stat-card">
+        <div class="stat-icon si-purple"><i class="bi bi-list-check"></i></div>
+        <div>
+          <div class="stat-label">Shortlisted</div>
+          <div class="stat-val">{{ total_shortlisted }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="stat-card">
+        <div class="stat-icon si-green"><i class="bi bi-trophy"></i></div>
+        <div>
+          <div class="stat-label">Selected</div>
+          <div class="stat-val">{{ total_selected }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Approval notice -->
+  {% if company.approval_status != 'approved' %}
+  <div class="alert alert-warning d-flex align-items-center gap-2 mb-4">
+    <i class="bi bi-exclamation-triangle-fill"></i>
+    <span>Your company is <strong>{{ company.approval_status }}</strong>.
+      {% if company.approval_status == 'pending' %}
+        Please wait for admin approval before creating placement drives.
+      {% else %}
+        Please contact the placement cell.
+      {% endif %}
+    </span>
+  </div>
+  {% endif %}
+
+  <!-- Drives table -->
+  <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+      My Placement Drives
+      {% if company.approval_status == 'approved' %}
+      <a href="{{ url_for('company.create_drive') }}" class="btn btn-primary btn-sm">
+        <i class="bi bi-plus me-1"></i>New Drive
+      </a>
+      {% endif %}
+    </div>
+
+    {% if drives %}
+    <div class="table-responsive">
+      <table class="table mb-0">
+        <thead>
+          <tr>
+            <th>Job Title</th>
+            <th>Type</th>
+            <th>Deadline</th>
+            <th>Applicants</th>
+            <th>Shortlisted</th>
+            <th>Selected</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for d in drives %}
+          <tr>
+            <td style="font-weight:500">{{ d.job_title }}</td>
+            <td style="font-size:13px;color:var(--mid)">{{ d.job_type.replace('_',' ')|capitalize }}</td>
+            <td style="font-size:13px;color:var(--mid)">{{ d.application_deadline }}</td>
+            <td>{{ d.applicant_count }}</td>
+            <td>{{ d.shortlisted_count }}</td>
+            <td>{{ d.selected_count }}</td>
+            <td><span class="badge b-{{ d.status }}">{{ d.status|capitalize }}</span></td>
+            <td>
+              <div class="d-flex gap-1 flex-wrap">
+                <a href="{{ url_for('company.drive_applications', drive_id=d.id) }}"
+                   class="btn btn-sm btn-outline-primary">Applicants</a>
+                {% if d.status not in ['closed', 'rejected'] %}
+                  <a href="{{ url_for('company.edit_drive', drive_id=d.id) }}"
+                     class="btn btn-sm btn-outline-secondary">Edit</a>
+                {% endif %}
+                {% if d.status == 'approved' %}
+                  <form method="POST" action="{{ url_for('company.close_drive', drive_id=d.id) }}">
+                    <button class="btn btn-sm btn-outline-danger">Close</button>
+                  </form>
+                {% endif %}
+                {% if d.status in ['pending', 'rejected'] %}
+                  <form method="POST" action="{{ url_for('company.delete_drive', drive_id=d.id) }}"
+                        onsubmit="return confirm('Delete this drive?')">
+                    <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                  </form>
+                {% endif %}
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <i class="bi bi-briefcase"></i>
+      <p>No drives created yet.
+        {% if company.approval_status == 'approved' %}
+          <a href="{{ url_for('company.create_drive') }}" style="color:var(--blue)">Create your first drive</a>
+        {% endif %}
+      </p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

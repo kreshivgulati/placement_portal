@@ -1,0 +1,342 @@
+{% extends 'base.html' %}
+{% block title %}Edit Profile — PlacementPlus{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ── HERO ── */
+  .page-hero {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 2rem 0 1.6rem;
+    margin-bottom: 2rem;
+  }
+  .page-hero h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.75rem; font-weight: 400; margin-bottom: .25rem;
+  }
+  .page-hero p { color: var(--mid); font-size: 14px; }
+
+  /* ── LAYOUT ── */
+  .form-layout {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 1.5rem;
+    align-items: start;
+  }
+  @media(max-width:900px) {
+    .form-layout { grid-template-columns: 1fr; }
+  }
+
+  /* ── SECTION CARD ── */
+  .section-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 14px; overflow: hidden;
+    margin-bottom: 1.25rem;
+  }
+  .sc-header {
+    padding: .9rem 1.4rem;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .sc-header h2 {
+    font-size: 13px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .05em;
+    color: var(--mid); margin: 0;
+  }
+  .sc-header .sc-icon {
+    width: 28px; height: 28px; border-radius: 7px;
+    background: var(--blue-lt); color: var(--blue);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; flex-shrink: 0;
+  }
+  .sc-body { padding: 1.4rem; }
+
+  /* ── FORM ELEMENTS ── */
+  .form-group { margin-bottom: 1.1rem; }
+  .form-label {
+    display: block; font-size: 13px; font-weight: 500;
+    color: var(--mid); margin-bottom: .35rem;
+  }
+  .form-label .req { color: #EF4444; margin-left: 2px; }
+  .form-control, .form-select {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: 8px; font-size: 14px;
+    padding: .5rem .85rem;
+    color: var(--dark); background: var(--white);
+    transition: border-color .15s, box-shadow .15s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .form-control:focus, .form-select:focus {
+    outline: none; border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+  }
+  .form-control::placeholder { color: var(--light); }
+  textarea.form-control { resize: vertical; min-height: 100px; line-height: 1.6; }
+  .form-hint {
+    font-size: 12px; color: var(--light); margin-top: .3rem;
+  }
+  .field-row {
+    display: grid; gap: 1rem;
+    grid-template-columns: 1fr 1fr;
+  }
+  @media(max-width:600px) { .field-row { grid-template-columns: 1fr; } }
+
+  /* ── AVATAR PREVIEW ── */
+  .avatar-preview {
+    width: 72px; height: 72px; border-radius: 18px;
+    background: var(--blue-lt); color: var(--blue);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 28px;
+    margin-bottom: 1rem;
+    border: 3px solid var(--white);
+    box-shadow: 0 2px 12px rgba(37,99,235,.15);
+  }
+
+  /* ── SIDEBAR INFO ── */
+  .info-note {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px; padding: 1rem 1.1rem;
+    font-size: 13px; color: var(--mid); line-height: 1.6;
+    margin-bottom: 1rem;
+  }
+  .info-note strong { color: var(--dark); }
+  .info-note i { color: var(--blue); margin-right: 5px; }
+
+  /* ── ACTION ROW ── */
+  .action-row {
+    display: flex; gap: 10px; align-items: center;
+    padding: 1.1rem 1.4rem;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .btn-save {
+    background: var(--blue); color: #fff;
+    border: none; border-radius: 9px;
+    padding: .55rem 1.4rem; font-size: 14px; font-weight: 500;
+    cursor: pointer; transition: background .15s;
+    font-family: 'DM Sans', sans-serif;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-save:hover { background: var(--blue-dk); }
+  .btn-cancel {
+    background: var(--white); color: var(--mid);
+    border: 1px solid var(--border); border-radius: 9px;
+    padding: .55rem 1.1rem; font-size: 14px; font-weight: 500;
+    text-decoration: none; transition: all .15s;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-cancel:hover { border-color: var(--mid); color: var(--dark); }
+
+  /* ── DIVIDER ── */
+  .field-divider {
+    height: 1px; background: var(--border); margin: 1.25rem 0;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- HERO -->
+<div class="page-hero">
+  <div class="container-fluid px-4">
+    <a href="{{ url_for('company.profile') }}"
+       style="font-size:13px;color:var(--mid);text-decoration:none;
+              display:inline-flex;align-items:center;gap:5px;margin-bottom:.75rem">
+      <i class="bi bi-arrow-left"></i> Back to Profile
+    </a>
+    <h1>Edit Company Profile</h1>
+    <p>Keep your company information up to date for students and the placement cell</p>
+  </div>
+</div>
+
+<div class="container-fluid px-4 pb-4">
+  <form method="POST" action="{{ url_for('company.edit_profile') }}">
+    <div class="form-layout">
+
+      <!-- ── LEFT: MAIN FORM ── -->
+      <div>
+
+        <!-- Company Info -->
+        <div class="section-card">
+          <div class="sc-header">
+            <div class="sc-icon"><i class="bi bi-building"></i></div>
+            <h2>Company Information</h2>
+          </div>
+          <div class="sc-body">
+
+            <!-- Avatar preview -->
+            <div class="avatar-preview">{{ company.company_name[0]|upper }}</div>
+
+            <div class="field-row">
+              <div class="form-group">
+                <label class="form-label">Company Name <span class="req">*</span></label>
+                <input type="text" name="company_name" class="form-control"
+                       value="{{ company.company_name }}"
+                       placeholder="Acme Corporation" required/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Industry</label>
+                <select name="industry" class="form-select">
+                  <option value="">Select industry</option>
+                  {% for ind in ['Technology','Finance','Healthcare',
+                                 'Manufacturing','Consulting','E-Commerce',
+                                 'Education','Automotive','Other'] %}
+                  <option value="{{ ind }}"
+                    {% if company.industry == ind %}selected{% endif %}>
+                    {{ ind }}
+                  </option>
+                  {% endfor %}
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Website</label>
+              <div style="position:relative">
+                <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);
+                             color:var(--light);font-size:13px">
+                  <i class="bi bi-globe"></i>
+                </span>
+                <input type="url" name="website" class="form-control"
+                       style="padding-left:2.1rem"
+                       value="{{ company.website or '' }}"
+                       placeholder="https://yourcompany.com"/>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Company Description</label>
+              <textarea name="description" class="form-control" rows="4"
+                        placeholder="Tell students about your company, culture, and what you do…">{{ company.description or '' }}</textarea>
+              <div class="form-hint">This appears on your public profile. Keep it concise and engaging.</div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- HR Contact -->
+        <div class="section-card">
+          <div class="sc-header">
+            <div class="sc-icon"><i class="bi bi-person-badge"></i></div>
+            <h2>HR Contact Details</h2>
+          </div>
+          <div class="sc-body">
+
+            <div class="field-row">
+              <div class="form-group">
+                <label class="form-label">HR Name <span class="req">*</span></label>
+                <input type="text" name="hr_contact_name" class="form-control"
+                       value="{{ company.hr_contact_name or '' }}"
+                       placeholder="Full name" required/>
+              </div>
+              <div class="form-group">
+                <label class="form-label">HR Email <span class="req">*</span></label>
+                <input type="email" name="hr_contact_email" class="form-control"
+                       value="{{ company.hr_contact_email or '' }}"
+                       placeholder="hr@company.com" required/>
+              </div>
+            </div>
+
+            <div class="form-group" style="max-width:280px">
+              <label class="form-label">HR Phone</label>
+              <div style="position:relative">
+                <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);
+                             color:var(--light);font-size:13px">
+                  <i class="bi bi-telephone"></i>
+                </span>
+                <input type="tel" name="hr_contact_phone" class="form-control"
+                       style="padding-left:2.1rem"
+                       value="{{ company.hr_contact_phone or '' }}"
+                       placeholder="9876543210"/>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Action row inside this card -->
+          <div class="action-row">
+            <button type="submit" class="btn-save">
+              <i class="bi bi-check-lg"></i> Save Changes
+            </button>
+            <a href="{{ url_for('company.profile') }}" class="btn-cancel">
+              Cancel
+            </a>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ── RIGHT: SIDEBAR ── -->
+      <div>
+
+        <!-- Current status -->
+        <div class="section-card mb-0" style="margin-bottom:1rem">
+          <div class="sc-header">
+            <div class="sc-icon"><i class="bi bi-info-circle"></i></div>
+            <h2>Account Status</h2>
+          </div>
+          <div class="sc-body">
+            <div style="display:flex;flex-direction:column;gap:.75rem;font-size:14px">
+              <div>
+                <div style="font-size:11px;color:var(--light);text-transform:uppercase;
+                            letter-spacing:.05em;margin-bottom:.3rem">Approval</div>
+                <span class="badge
+                  {% if company.approval_status == 'approved' %}b-approved
+                  {% elif company.approval_status == 'pending' %}b-pending
+                  {% else %}b-rejected{% endif %}">
+                  {% if company.approval_status == 'approved' %}
+                    <i class="bi bi-check-circle-fill"></i>
+                  {% elif company.approval_status == 'pending' %}
+                    <i class="bi bi-hourglass-split"></i>
+                  {% else %}
+                    <i class="bi bi-x-circle-fill"></i>
+                  {% endif %}
+                  {{ company.approval_status|capitalize }}
+                </span>
+              </div>
+              <div>
+                <div style="font-size:11px;color:var(--light);text-transform:uppercase;
+                            letter-spacing:.05em;margin-bottom:.3rem">Account</div>
+                <span class="badge
+                  {% if company.account_status == 'active' %}b-approved
+                  {% else %}b-rejected{% endif %}">
+                  {{ company.account_status|capitalize }}
+                </span>
+              </div>
+              <div>
+                <div style="font-size:11px;color:var(--light);text-transform:uppercase;
+                            letter-spacing:.05em;margin-bottom:.3rem">Login Email</div>
+                <div style="font-size:13px;color:var(--mid);word-break:break-all">
+                  {{ company.email }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tips -->
+        <div class="info-note">
+          <i class="bi bi-lightbulb"></i>
+          <strong>Tips for a great profile</strong>
+          <ul style="margin:.5rem 0 0;padding-left:1.1rem;line-height:1.8">
+            <li>Add a clear company description so students know what you do</li>
+            <li>Keep HR contact details up to date</li>
+            <li>Add your website so students can research your company</li>
+          </ul>
+        </div>
+
+        <div class="info-note" style="border-color:#BFDBFE;background:#EFF6FF">
+          <i class="bi bi-shield-check" style="color:var(--blue)"></i>
+          <strong style="color:var(--blue)">Note:</strong>
+          Editing your profile does <em>not</em> require re-approval.
+          Only editing a placement drive resets it to pending.
+        </div>
+
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,750 @@
+{% extends 'base.html' %}
+{% block title %}Create Drive — PlacementPlus{% endblock %}
+
+{% block extra_css %}
+<style>
+  .page-hero {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 2rem 0 1.6rem;
+    margin-bottom: 2rem;
+  }
+  .page-hero h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.75rem; font-weight: 400; margin-bottom: .25rem;
+  }
+  .page-hero p { color: var(--mid); font-size: 14px; }
+
+  /* ── STEP BAR ── */
+  .steps {
+    display: flex; align-items: center;
+    margin-bottom: 2rem; gap: 0;
+  }
+  .step {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; font-weight: 500;
+    color: var(--light); cursor: pointer;
+    transition: color .2s; user-select: none;
+  }
+  .step.active { color: var(--blue); }
+  .step.done   { color: var(--mid); cursor: pointer; }
+  .step-num {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--surface); border: 1.5px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600; flex-shrink: 0;
+    transition: all .2s;
+  }
+  .step.active .step-num {
+    background: var(--blue); border-color: var(--blue); color: #fff;
+    box-shadow: 0 0 0 4px rgba(37,99,235,.15);
+  }
+  .step.done .step-num {
+    background: #ECFDF5; border-color: #A7F3D0; color: #065F46;
+  }
+  .step-line {
+    flex: 1; height: 2px;
+    background: var(--border);
+    margin: 0 .6rem; max-width: 80px;
+    transition: background .3s;
+  }
+  .step-line.done { background: #A7F3D0; }
+
+  /* ── LAYOUT ── */
+  .form-layout {
+    display: grid;
+    grid-template-columns: 1fr 300px;
+    gap: 1.5rem; align-items: start;
+  }
+  @media(max-width:900px) {
+    .form-layout { grid-template-columns: 1fr; }
+    .sidebar-col { order: -1; }
+  }
+
+  /* ── STEP PANELS ── */
+  .step-panel { display: none; }
+  .step-panel.active { display: block; animation: slideIn .25s ease; }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ── SECTION CARD ── */
+  .section-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 14px; overflow: hidden;
+    margin-bottom: 1.25rem;
+  }
+  .sc-header {
+    padding: .9rem 1.4rem;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .sc-header h2 {
+    font-size: 13px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .05em;
+    color: var(--mid); margin: 0; flex: 1;
+  }
+  .sc-icon {
+    width: 28px; height: 28px; border-radius: 7px;
+    background: var(--blue-lt); color: var(--blue);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; flex-shrink: 0;
+  }
+  .sc-body { padding: 1.4rem; }
+
+  /* ── FORM ELEMENTS ── */
+  .form-group { margin-bottom: 1.1rem; }
+  .form-label {
+    display: block; font-size: 13px; font-weight: 500;
+    color: var(--mid); margin-bottom: .35rem;
+  }
+  .form-label .req { color: #EF4444; margin-left: 2px; }
+  .form-control, .form-select {
+    width: 100%; border: 1px solid var(--border);
+    border-radius: 8px; font-size: 14px;
+    padding: .5rem .85rem;
+    color: var(--dark); background: var(--white);
+    transition: border-color .15s, box-shadow .15s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .form-control:focus, .form-select:focus {
+    outline: none; border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+  }
+  .form-control::placeholder { color: var(--light); }
+  textarea.form-control { resize: vertical; min-height: 120px; line-height: 1.6; }
+  .form-hint { font-size: 12px; color: var(--light); margin-top: .3rem; }
+  .field-row-2 { display: grid; gap: 1rem; grid-template-columns: 1fr 1fr; }
+  @media(max-width:600px) { .field-row-2 { grid-template-columns: 1fr; } }
+
+  /* ── JOB TYPE SELECTOR ── */
+  .type-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: .75rem; }
+  .type-option { position: relative; }
+  .type-option input[type=radio] {
+    position: absolute; opacity: 0; width: 100%; height: 100%;
+    cursor: pointer; margin: 0; z-index: 1;
+  }
+  .type-label {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 6px; padding: .85rem .5rem;
+    border: 1.5px solid var(--border); border-radius: 10px;
+    cursor: pointer; transition: all .15s; text-align: center;
+  }
+  .type-label .tl-icon { font-size: 20px; color: var(--light); transition: color .15s; }
+  .type-label .tl-name { font-size: 13px; font-weight: 500; color: var(--mid); transition: color .15s; }
+  .type-option input:checked + .type-label { border-color: var(--blue); background: var(--blue-lt); }
+  .type-option input:checked + .type-label .tl-icon,
+  .type-option input:checked + .type-label .tl-name { color: var(--blue); }
+  .type-option:hover .type-label { border-color: #BFDBFE; }
+
+  /* ── CGPA SLIDER ── */
+  .cgpa-wrap { display: flex; align-items: center; gap: 1rem; }
+  .cgpa-wrap input[type=range] { flex: 1; accent-color: var(--blue); cursor: pointer; }
+  .cgpa-display {
+    min-width: 48px; height: 36px;
+    background: var(--blue-lt); color: var(--blue);
+    border-radius: 8px; border: 1px solid #BFDBFE;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 600; flex-shrink: 0;
+  }
+
+  /* ── CHECKBOX GRID ── */
+  .multi-select-wrap {
+    border: 1px solid var(--border); border-radius: 8px;
+    overflow: hidden; background: var(--white);
+    transition: border-color .15s, box-shadow .15s;
+  }
+  .multi-select-wrap:focus-within {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+  }
+  .checkbox-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px,1fr)); }
+  .check-item {
+    display: flex; align-items: center; gap: 7px;
+    padding: .55rem .75rem;
+    border-bottom: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    font-size: 13px; color: var(--dark);
+    cursor: pointer; transition: background .12s; user-select: none;
+  }
+  .check-item:hover { background: var(--blue-lt); }
+  .check-item input[type=checkbox] { accent-color: var(--blue); width:14px; height:14px; cursor:pointer; }
+  .check-item input[type=checkbox]:checked + span { color: var(--blue); font-weight: 500; }
+
+  /* ── ACTION ROW (bottom of each panel) ── */
+  .action-row {
+    display: flex; gap: 10px; align-items: center;
+    padding: 1.1rem 1.4rem;
+    border-top: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .btn-next {
+    background: var(--blue); color: #fff;
+    border: none; border-radius: 9px;
+    padding: .55rem 1.4rem; font-size: 14px; font-weight: 500;
+    cursor: pointer; transition: background .15s;
+    font-family: 'DM Sans', sans-serif;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-next:hover { background: var(--blue-dk); }
+  .btn-prev {
+    background: var(--white); color: var(--mid);
+    border: 1px solid var(--border); border-radius: 9px;
+    padding: .55rem 1.1rem; font-size: 14px; font-weight: 500;
+    cursor: pointer; transition: all .15s;
+    font-family: 'DM Sans', sans-serif;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-prev:hover { border-color: var(--mid); color: var(--dark); }
+  .btn-submit {
+    background: #10B981; color: #fff;
+    border: none; border-radius: 9px;
+    padding: .55rem 1.4rem; font-size: 14px; font-weight: 500;
+    cursor: pointer; transition: background .15s;
+    font-family: 'DM Sans', sans-serif;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-submit:hover { background: #059669; }
+  .btn-cancel-link {
+    background: var(--white); color: var(--mid);
+    border: 1px solid var(--border); border-radius: 9px;
+    padding: .55rem 1.1rem; font-size: 14px; font-weight: 500;
+    text-decoration: none; transition: all .15s;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-cancel-link:hover { border-color: var(--mid); color: var(--dark); }
+
+  /* ── SIDEBAR ── */
+  .info-note {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; padding: 1rem 1.1rem;
+    font-size: 13px; color: var(--mid); line-height: 1.6;
+    margin-bottom: 1rem;
+  }
+  .info-note strong { color: var(--dark); }
+  .info-note i { color: var(--blue); margin-right: 5px; }
+  .info-note ul { margin:.5rem 0 0; padding-left:1.1rem; line-height:1.8; }
+
+  /* sidebar progress */
+  .sidebar-progress {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 14px; overflow: hidden; margin-bottom: 1rem;
+  }
+  .sp-header {
+    padding: .85rem 1.1rem; border-bottom: 1px solid var(--border);
+    font-size: 13px; font-weight: 600; color: var(--dark);
+  }
+  .sp-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: .75rem 1.1rem; font-size: 13px; color: var(--light);
+    border-bottom: 1px solid var(--border); transition: all .2s;
+    cursor: pointer;
+  }
+  .sp-item:last-child { border-bottom: none; }
+  .sp-item.done   { color: var(--mid); }
+  .sp-item.active { color: var(--blue); font-weight: 500; background: var(--blue-lt); }
+  .sp-dot {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--surface); border: 1.5px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; flex-shrink: 0;
+    transition: all .2s;
+  }
+  .sp-item.done   .sp-dot { background:#ECFDF5; border-color:#A7F3D0; color:#065F46; }
+  .sp-item.active .sp-dot { background:var(--blue); border-color:var(--blue); color:#fff; }
+
+  /* live preview */
+  .preview-card {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 14px; overflow: hidden; margin-bottom: 1rem;
+  }
+  .preview-card .pc-header {
+    padding: .85rem 1.1rem; border-bottom: 1px solid var(--border);
+    font-size: 13px; font-weight: 600; color: var(--dark);
+  }
+  .preview-card .pc-body { padding: 1rem; }
+  .preview-inner {
+    border: 1px solid var(--border); border-radius: 10px; padding: 1rem;
+  }
+
+  /* badge */
+  .badge { font-weight:500; font-size:11px; padding:.3em .65em; border-radius:6px; }
+  .b-pending { background:#FFFBEB; color:#92400E; border:1px solid #FDE68A; }
+
+  /* validation error highlight */
+  .form-control.error, .multi-select-wrap.error { border-color: #EF4444 !important; }
+  .err-msg { font-size:12px; color:#EF4444; margin-top:.3rem; display:none; }
+  .err-msg.show { display:block; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- HERO -->
+<div class="page-hero">
+  <div class="container-fluid px-4">
+    <a href="{{ url_for('company.drives') }}"
+       style="font-size:13px;color:var(--mid);text-decoration:none;
+              display:inline-flex;align-items:center;gap:5px;margin-bottom:.75rem">
+      <i class="bi bi-arrow-left"></i> Back to Drives
+    </a>
+    <h1>Create Placement Drive</h1>
+    <p>Fill in the details step by step. The drive goes to admin for approval before students can apply.</p>
+  </div>
+</div>
+
+<div class="container-fluid px-4 pb-4">
+
+  <!-- STEP BAR -->
+  <div class="steps mb-4" id="stepBar">
+    <div class="step active" data-step="1" onclick="goToStep(1)">
+      <div class="step-num">1</div>
+      <span>Job Details</span>
+    </div>
+    <div class="step-line" id="line-1"></div>
+    <div class="step" data-step="2" onclick="goToStep(2)">
+      <div class="step-num">2</div>
+      <span>Eligibility</span>
+    </div>
+    <div class="step-line" id="line-2"></div>
+    <div class="step" data-step="3" onclick="goToStep(3)">
+      <div class="step-num">3</div>
+      <span>Timeline</span>
+    </div>
+  </div>
+
+<form method="POST" action="{{ url_for('company.create_drive') }}">
+      <div class="form-layout">
+
+      <!-- ── LEFT: STEP PANELS ── -->
+      <div>
+
+        <!-- ═══ PANEL 1: JOB DETAILS ═══ -->
+        <div class="step-panel active" id="panel-1">
+          <div class="section-card">
+            <div class="sc-header">
+              <div class="sc-icon"><i class="bi bi-briefcase"></i></div>
+              <h2>Job Details</h2>
+            </div>
+            <div class="sc-body">
+
+              <div class="form-group">
+                <label class="form-label">Job Title <span class="req">*</span></label>
+                <input type="text" name="job_role" id="jobTitle"
+                       class="form-control"
+                       placeholder="e.g. Software Engineer, Data Analyst…"
+                       oninput="updatePreview()"/>
+                <div class="err-msg" id="err-title">Job title is required.</div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Job Type <span class="req">*</span></label>
+                <div class="type-grid">
+                  <div class="type-option">
+                    <input type="radio" name="job_type" value="full_time" id="jt_full"/>
+                    <label class="type-label" for="jt_full">
+                      <span class="tl-icon"><i class="bi bi-building"></i></span>
+                      <span class="tl-name">Full Time</span>
+                    </label>
+                  </div>
+                  <div class="type-option">
+                    <input type="radio" name="job_type" value="internship" id="jt_intern"/>
+                    <label class="type-label" for="jt_intern">
+                      <span class="tl-icon"><i class="bi bi-laptop"></i></span>
+                      <span class="tl-name">Internship</span>
+                    </label>
+                  </div>
+                  <div class="type-option">
+                    <input type="radio" name="job_type" value="contract" id="jt_contract"/>
+                    <label class="type-label" for="jt_contract">
+                      <span class="tl-icon"><i class="bi bi-file-earmark-text"></i></span>
+                      <span class="tl-name">Contract</span>
+                    </label>
+                  </div>
+                </div>
+                <div class="err-msg" id="err-type">Please select a job type.</div>
+              </div>
+
+              <div class="field-row-2">
+                <div class="form-group">
+                  <label class="form-label">Location</label>
+                  <div style="position:relative">
+                    <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);
+                                 color:var(--light);font-size:13px;pointer-events:none">
+                      <i class="bi bi-geo-alt"></i>
+                    </span>
+                    <input type="text" name="location" class="form-control"
+                           style="padding-left:2.1rem"
+                           placeholder="e.g. Bangalore / Remote"/>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Salary / Stipend</label>
+                  <div style="position:relative">
+                    <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);
+                                 color:var(--light);font-size:13px;pointer-events:none">
+                      <i class="bi bi-currency-rupee"></i>
+                    </span>
+                    <input type="text" name="salary_package" class="form-control"
+                           style="padding-left:2.1rem"
+                           placeholder="e.g. ₹12 LPA or ₹25,000/month"/>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Job Description <span class="req">*</span></label>
+                <textarea name="job_description" id="jobDesc" class="form-control" rows="5"
+                          placeholder="Describe the role, key responsibilities, required skills…"></textarea>
+                <div class="err-msg" id="err-desc">Job description is required.</div>
+                <div class="form-hint">A detailed description helps students decide if they're a good fit.</div>
+              </div>
+
+            </div>
+            <div class="action-row">
+              <button type="button" class="btn-next" onclick="nextStep(1)">
+                Next: Eligibility <i class="bi bi-arrow-right"></i>
+              </button>
+              <a href="{{ url_for('company.drives') }}" class="btn-cancel-link">Cancel</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ PANEL 2: ELIGIBILITY ═══ -->
+        <div class="step-panel" id="panel-2">
+          <div class="section-card">
+            <div class="sc-header">
+              <div class="sc-icon"><i class="bi bi-mortarboard"></i></div>
+              <h2>Eligibility Criteria</h2>
+            </div>
+            <div class="sc-body">
+
+              <div class="form-group">
+                <label class="form-label">Minimum CGPA</label>
+                <div class="cgpa-wrap">
+                  <input type="range" name="eligibility_cgpa" id="cgpaRange"
+                         min="0" max="10" step="0.1" value="0"
+                         oninput="document.getElementById('cgpaVal').textContent=parseFloat(this.value).toFixed(1)"/>
+                  <div class="cgpa-display" id="cgpaVal">0.0</div>
+                </div>
+                <div class="form-hint">Set to 0.0 for no minimum CGPA requirement.</div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Eligible Branches</label>
+                <div class="multi-select-wrap">
+                  <div class="checkbox-grid">
+                    {% for b in ['CSE','ECE','IT','ME','CE','EE','Civil','Other'] %}
+                    <label class="check-item">
+                      <input type="checkbox" name="eligible_branches" value="{{ b }}"/>
+                      <span>{{ b }}</span>
+                    </label>
+                    {% endfor %}
+                  </div>
+                </div>
+                <div class="form-hint">Leave all unchecked to allow all branches.</div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">Eligible Years</label>
+                <div class="multi-select-wrap">
+                  <div class="checkbox-grid" style="grid-template-columns:repeat(4,1fr)">
+                    {% for y, label in [('1','1st Year'),('2','2nd Year'),('3','3rd Year'),('4','4th Year')] %}
+                    <label class="check-item">
+                      <input type="checkbox" name="eligible_years" value="{{ y }}"/>
+                      <span>{{ label }}</span>
+                    </label>
+                    {% endfor %}
+                  </div>
+                </div>
+                <div class="form-hint">Leave all unchecked to allow all years.</div>
+              </div>
+
+            </div>
+            <div class="action-row">
+              <button type="button" class="btn-next" onclick="nextStep(2)">
+                Next: Timeline <i class="bi bi-arrow-right"></i>
+              </button>
+              <button type="button" class="btn-prev" onclick="goToStep(1)">
+                <i class="bi bi-arrow-left"></i> Back
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ PANEL 3: TIMELINE ═══ -->
+        <div class="step-panel" id="panel-3">
+          <div class="section-card">
+            <div class="sc-header">
+              <div class="sc-icon"><i class="bi bi-calendar3"></i></div>
+              <h2>Timeline</h2>
+            </div>
+            <div class="sc-body">
+              <div class="form-group" style="max-width:300px">
+                <label class="form-label">Application Deadline <span class="req">*</span></label>
+                <input type="date" name="application_deadline" id="deadline"
+                       class="form-control"/>
+                <div class="err-msg" id="err-deadline">Please set an application deadline.</div>
+                <div class="form-hint">Students cannot apply after this date.</div>
+              </div>
+
+              <!-- Summary before submit -->
+              <div id="summaryBox"
+                   style="margin-top:1.25rem;padding:1rem;background:var(--surface);
+                          border:1px solid var(--border);border-radius:10px;display:none">
+                <div style="font-size:12px;color:var(--light);text-transform:uppercase;
+                            letter-spacing:.05em;margin-bottom:.75rem;font-weight:500">
+                  Drive Summary
+                </div>
+                <div id="summaryContent"
+                     style="display:flex;flex-direction:column;gap:.5rem;font-size:13px"></div>
+              </div>
+            </div>
+            <div class="action-row">
+              <button type="submit" class="btn-submit" onclick="return validateStep3()">
+                <i class="bi bi-send-fill"></i> Submit for Approval
+              </button>
+              <button type="button" class="btn-prev" onclick="goToStep(2)">
+                <i class="bi bi-arrow-left"></i> Back
+              </button>
+              <span style="font-size:12px;color:var(--light);margin-left:.25rem">
+                <i class="bi bi-info-circle me-1"></i>Admin reviews before students can apply
+              </span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ── RIGHT: SIDEBAR ── -->
+      <div class="sidebar-col">
+
+        <!-- Step progress sidebar -->
+        <div class="sidebar-progress">
+          <div class="sp-header"><i class="bi bi-list-check me-2" style="color:var(--blue)"></i>Progress</div>
+          <div class="sp-item active" id="sp-1" onclick="goToStep(1)">
+            <div class="sp-dot">1</div>
+            <span>Job Details</span>
+          </div>
+          <div class="sp-item" id="sp-2" onclick="goToStep(2)">
+            <div class="sp-dot">2</div>
+            <span>Eligibility</span>
+          </div>
+          <div class="sp-item" id="sp-3" onclick="goToStep(3)">
+            <div class="sp-dot">3</div>
+            <span>Timeline</span>
+          </div>
+        </div>
+
+        <!-- Live preview -->
+        <div class="preview-card">
+          <div class="pc-header"><i class="bi bi-eye me-2" style="color:var(--blue)"></i>Live Preview</div>
+          <div class="pc-body">
+            <div class="preview-inner">
+              <div id="previewTitle"
+                   style="font-weight:600;font-size:14px;color:var(--light)">
+                Job title will appear here
+              </div>
+              <div style="font-size:12px;color:var(--light);margin-top:3px">
+                Your Company
+              </div>
+              <div style="margin-top:.6rem">
+                <span class="badge b-pending">
+                  <i class="bi bi-hourglass-split me-1"></i>Pending Approval
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tips (changes per step) -->
+        <div class="info-note" id="sidebarTip">
+          <i class="bi bi-lightbulb"></i>
+          <strong>Step 1 — Job Details</strong>
+          <ul>
+            <li>Use a specific, descriptive job title</li>
+            <li>Mention required tech stack in the description</li>
+            <li>Include location and package to attract more applicants</li>
+          </ul>
+        </div>
+
+        <!-- Approval flow -->
+        <div class="info-note" style="border-color:#BFDBFE;background:#EFF6FF">
+          <i class="bi bi-arrow-right-circle" style="color:var(--blue)"></i>
+          <strong style="color:var(--blue)">Approval Flow</strong>
+          <div style="margin-top:.5rem;display:flex;flex-direction:column;gap:.4rem">
+            <div style="display:flex;align-items:center;gap:6px;font-size:12px">
+              <i class="bi bi-circle-fill" style="font-size:6px;color:var(--blue)"></i>
+              You submit the drive
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;font-size:12px">
+              <i class="bi bi-circle-fill" style="font-size:6px;color:var(--blue)"></i>
+              Admin reviews &amp; approves
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;font-size:12px">
+              <i class="bi bi-circle-fill" style="font-size:6px;color:#10B981"></i>
+              Students can apply
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </form>
+</div>
+
+<script>
+  var currentStep = 1;
+  var maxReached  = 1;
+
+  var tips = {
+    1: '<i class="bi bi-lightbulb"></i><strong>Step 1 — Job Details</strong><ul><li>Use a specific, descriptive job title</li><li>Mention required tech stack in the description</li><li>Include location and package to attract more applicants</li></ul>',
+    2: '<i class="bi bi-lightbulb"></i><strong>Step 2 — Eligibility</strong><ul><li>Leave CGPA at 0.0 if there\'s no minimum</li><li>Leave branches/years blank to allow everyone</li><li>Narrow criteria means fewer but more relevant applicants</li></ul>',
+    3: '<i class="bi bi-lightbulb"></i><strong>Step 3 — Timeline</strong><ul><li>Give students at least 5–7 days to apply</li><li>Review the summary before submitting</li><li>You can edit the drive after submission (will need re-approval)</li></ul>'
+  };
+
+  function goToStep(n) {
+    if (n > maxReached) return; // can't skip ahead past reached steps
+    showPanel(n);
+  }
+
+  function nextStep(from) {
+    if (!validateStep(from)) return;
+    maxReached = Math.max(maxReached, from + 1);
+    showPanel(from + 1);
+    if (from + 1 === 3) buildSummary();
+  }
+
+  function showPanel(n) {
+    // hide all panels
+    document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+    document.getElementById('panel-' + n).classList.add('active');
+    currentStep = n;
+    updateStepBar();
+    updateSidebar();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function updateStepBar() {
+    for (var i = 1; i <= 3; i++) {
+      var stepEl = document.querySelector('.step[data-step="' + i + '"]');
+      stepEl.classList.remove('active','done');
+      if (i === currentStep) stepEl.classList.add('active');
+      else if (i < currentStep) stepEl.classList.add('done');
+
+      // step num: show check icon if done
+      var numEl = stepEl.querySelector('.step-num');
+      if (i < currentStep) numEl.innerHTML = '<i class="bi bi-check" style="font-size:11px"></i>';
+      else numEl.textContent = i;
+    }
+    // connector lines
+    for (var j = 1; j <= 2; j++) {
+      var line = document.getElementById('line-' + j);
+      if (j < currentStep) line.classList.add('done');
+      else line.classList.remove('done');
+    }
+  }
+
+  function updateSidebar() {
+    for (var i = 1; i <= 3; i++) {
+      var sp = document.getElementById('sp-' + i);
+      sp.classList.remove('active','done');
+      if (i === currentStep) sp.classList.add('active');
+      else if (i < currentStep) sp.classList.add('done');
+
+      var dot = sp.querySelector('.sp-dot');
+      if (i < currentStep) dot.innerHTML = '<i class="bi bi-check" style="font-size:10px"></i>';
+      else dot.textContent = i;
+    }
+    document.getElementById('sidebarTip').innerHTML = tips[currentStep];
+  }
+
+  /* ── VALIDATION ── */
+  function validateStep(n) {
+    if (n === 1) {
+      var ok = true;
+      var title = document.getElementById('jobTitle').value.trim();
+      var desc  = document.getElementById('jobDesc').value.trim();
+      var type  = document.querySelector('input[name=job_type]:checked');
+
+      toggleErr('err-title', !title);
+      if (!title) { document.getElementById('jobTitle').classList.add('error'); ok = false; }
+      else document.getElementById('jobTitle').classList.remove('error');
+
+      toggleErr('err-type', !type);
+
+      toggleErr('err-desc', !desc);
+      if (!desc) { document.getElementById('jobDesc').classList.add('error'); ok = false; }
+      else document.getElementById('jobDesc').classList.remove('error');
+
+      return ok && !!type;
+    }
+    return true; // step 2 has no required fields
+  }
+
+  function validateStep3() {
+    var d = document.getElementById('deadline').value;
+    if (!d) {
+      toggleErr('err-deadline', true);
+      document.getElementById('deadline').classList.add('error');
+      return false;
+    }
+    document.getElementById('deadline').classList.remove('error');
+    toggleErr('err-deadline', false);
+    return true;
+  }
+
+  function toggleErr(id, show) {
+    var el = document.getElementById(id);
+    if (el) { if (show) el.classList.add('show'); else el.classList.remove('show'); }
+  }
+
+  /* ── LIVE PREVIEW ── */
+  function updatePreview() {
+    var title = document.getElementById('jobTitle').value.trim();
+    var el    = document.getElementById('previewTitle');
+    el.textContent  = title || 'Job title will appear here';
+    el.style.color  = title ? 'var(--dark)' : 'var(--light)';
+    el.style.fontWeight = title ? '600' : '400';
+  }
+
+  /* ── SUMMARY (step 3) ── */
+  function buildSummary() {
+    var title    = document.getElementById('jobTitle').value.trim();
+    var type     = document.querySelector('input[name=job_type]:checked');
+    var loc      = document.querySelector('input[name=location]').value.trim();
+    var salary   = document.querySelector('input[name=salary_package]').value.trim();
+    var cgpa     = parseFloat(document.getElementById('cgpaRange').value).toFixed(1);
+    var branches = Array.from(document.querySelectorAll('input[name=eligible_branches]:checked')).map(function(c){ return c.value; });
+    var years    = Array.from(document.querySelectorAll('input[name=eligible_years]:checked')).map(function(c){ return c.value + ' Year'; });
+
+    var rows = [
+      ['Job Title',  title || '—'],
+      ['Type',       type ? type.value.replace('_',' ') : '—'],
+      ['Location',   loc || 'Not specified'],
+      ['Package',    salary || 'Not specified'],
+      ['Min CGPA',   cgpa === '0.0' ? 'No minimum' : cgpa],
+      ['Branches',   branches.length ? branches.join(', ') : 'All branches'],
+      ['Years',      years.length ? years.join(', ') : 'All years']
+    ];
+
+    var html = rows.map(function(r) {
+      return '<div style="display:flex;justify-content:space-between;gap:1rem">' +
+             '<span style="color:var(--light)">' + r[0] + '</span>' +
+             '<span style="font-weight:500;color:var(--dark);text-align:right">' + r[1] + '</span>' +
+             '</div>';
+    }).join('');
+
+    var box = document.getElementById('summaryBox');
+    document.getElementById('summaryContent').innerHTML = html;
+    box.style.display = 'block';
+  }
+
+  // Make step bar items clickable only if reached
+  document.querySelectorAll('.step').forEach(function(el) {
+    el.style.cursor = 'pointer';
+  });
+</script>
+{% endblock %}

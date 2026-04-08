@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% block title %}Student Registration — PlacementPlus{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width:680px; padding: 2rem 1rem;">
+  <div class="text-center mb-4">
+    <div class="co-logo mx-auto mb-3" style="width:48px;height:48px;font-size:20px;">
+      <i class="bi bi-mortarboard"></i>
+    </div>
+    <h2 style="font-family:'DM Serif Display',serif;font-weight:400;font-size:1.8rem;">Student Registration</h2>
+    <p style="color:var(--mid);font-size:14px;">Create your account to start applying for placement drives</p>
+  </div>
+
+  <div class="card">
+    <div class="card-body">
+      <form method="POST" action="{{ url_for('auth.register_student') }}">
+
+        <p style="font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--light);font-weight:500;margin-bottom:1rem;">
+          Account Details
+        </p>
+        <div class="row g-3 mb-3">
+          <div class="col-md-6">
+            <label class="form-label">Full Name *</label>
+            <input type="text" name="name" class="form-control" placeholder="Ravi Sharma" required/>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Email Address *</label>
+            <input type="email" name="email" class="form-control" placeholder="ravi@college.edu" required/>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Password *</label>
+            <input type="password" name="password" class="form-control" placeholder="Min 6 characters" required/>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Confirm Password *</label>
+            <input type="password" name="confirm_password" class="form-control" placeholder="Repeat password" required/>
+          </div>
+        </div>
+
+        <hr style="border-color:var(--border);margin:1.2rem 0"/>
+        <p style="font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--light);font-weight:500;margin-bottom:1rem;">
+          Academic Details
+        </p>
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label">Student ID *</label>
+            <input type="text" name="student_id" class="form-control"
+                   placeholder="e.g. STU2024001" required/>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Phone</label>
+            <input type="tel" name="phone" class="form-control" placeholder="9876543210"/>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Branch *</label>
+            <select name="branch" class="form-select" required>
+              <option value="" disabled selected>Select branch</option>
+              <option>CSE</option>
+              <option>ECE</option>
+              <option>IT</option>
+              <option>ME</option>
+              <option>CE</option>
+              <option>EE</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Year *</label>
+            <select name="year" class="form-select" required>
+              <option value="" disabled selected>Year</option>
+              <option value="1">1st</option>
+              <option value="2">2nd</option>
+              <option value="3">3rd</option>
+              <option value="4">4th</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">CGPA *</label>
+            <input type="number" name="cgpa" class="form-control"
+                   step="0.01" min="0" max="10" placeholder="8.5" required/>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100 mt-4" style="padding:.6rem">
+          Create Account
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <p class="text-center mt-3" style="font-size:14px;color:var(--mid)">
+    Already have an account?
+    <a href="{{ url_for('auth.login') }}" style="color:var(--blue);text-decoration:none;font-weight:500">Sign in</a>
+  </p>
+</div>
+{% endblock %}

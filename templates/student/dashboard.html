@@ -1,0 +1,244 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard — PlacementPlus{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+  <div class="pg-header">
+    <h1>Find a job that suits your interest &amp; skills.</h1>
+    <p>Browse approved placement drives and track your applications</p>
+  </div>
+
+  <!-- Stats -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-lg-3">
+      <div class="stat-card">
+        <div class="stat-icon si-blue"><i class="bi bi-briefcase"></i></div>
+        <div>
+          <div class="stat-label">Open Drives</div>
+          <div class="stat-val">{{ open_drives|length }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="stat-card">
+        <div class="stat-icon si-amber"><i class="bi bi-file-earmark-text"></i></div>
+        <div>
+          <div class="stat-label">Applied</div>
+          <div class="stat-val">{{ applied|length }}</div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="stat-card">
+        <div class="stat-icon si-purple"><i class="bi bi-list-check"></i></div>
+        <div>
+          <div class="stat-label">Shortlisted</div>
+          <div class="stat-val">
+            {{ applied|selectattr('status','equalto','shortlisted')|list|length }}
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="stat-card">
+        <div class="stat-icon si-green"><i class="bi bi-trophy"></i></div>
+        <div>
+          <div class="stat-label">Selected</div>
+          <div class="stat-val">
+            {{ applied|selectattr('status','equalto','selected')|list|length }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Open drives -->
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h2 style="font-size:1.1rem;font-weight:600">Open Placement Drives</h2>
+    <a href="{{ url_for('student.drives') }}"
+       style="font-size:13px;color:var(--blue);text-decoration:none">
+      View all <i class="bi bi-arrow-right"></i>
+    </a>
+  </div>
+
+  {% if open_drives %}
+  <div class="row g-3 mb-5">
+    {% for d in open_drives[:6] %}
+    <div class="col-md-6 col-lg-4">
+      <div class="drive-card">
+        <div class="d-flex align-items-start gap-3 mb-3">
+          <div class="co-logo">{{ d.company_name[0]|upper }}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+              {{ d.job_role }}
+            </div>
+            <div style="font-size:13px;color:var(--mid)">{{ d.company_name }}</div>
+          </div>
+          <span class="badge b-{{ 'applied' if d.id in applied_drive_ids else 'approved' }}" style="flex-shrink:0">
+            {% if d.id in applied_drive_ids %}Applied{% else %}Open{% endif %}
+          </span>
+        </div>
+
+        <div class="d-flex gap-3 mb-3" style="font-size:13px;color:var(--mid)">
+          <span><i class="bi bi-briefcase me-1"></i>{{ d.job_role.replace('_',' ')|capitalize }}</span>
+          {% if d.location %}<span><i class="bi bi-geo-alt me-1"></i>{{ d.location }}</span>{% endif %}
+          {% if d.salary_package %}<span><i class="bi bi-currency-rupee me-1"></i>{{ d.salary_package }}</span>{% endif %}
+        </div>
+
+        <div style="font-size:12px;color:var(--light);margin-bottom:1rem">
+          <i class="bi bi-calendar me-1"></i>Deadline: {{ d.application_deadline }}
+        </div>
+
+        {% if d.id in applied_drive_ids %}
+          <button class="btn btn-outline-secondary btn-sm w-100" disabled>
+            <i class="bi bi-check me-1"></i>Already Applied
+          </button>
+        {% else %}
+          <a href="{{ url_for('student.drive_detail', drive_id=d.id) }}"
+             class="btn btn-primary btn-sm w-100">View &amp; Apply</a>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty-state mb-5">
+    <i class="bi bi-briefcase"></i>
+    <p>No open drives available right now. Check back soon!</p>
+  </div>
+  {% endif %}
+
+  <!-- Applied drives -->
+  <div class="d-flex align-items-center justify-content-between mb-3">
+    <h2 style="font-size:1.1rem;font-weight:600">My Applications</h2>
+    <a href="{{ url_for('student.my_applications') }}"
+       style="font-size:13px;color:var(--blue);text-decoration:none">
+      View all <i class="bi bi-arrow-right"></i>
+    </a>
+  </div>
+
+  {% if applied %}
+  <div class="card">
+    <div class="table-responsive">
+      <table class="table mb-0">
+        <thead>
+          <tr>
+            <th>Drive</th>
+            <th>Company</th>
+            <th>Type</th>
+            <th>Status</th>
+            <th>Applied</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for a in applied[:5] %}
+          <tr>
+            <td style="font-weight:500">{{ a.job_role }}</td>
+            <td style="color:var(--mid)">{{ a.company_name }}</td>
+            <td style="font-size:13px;color:var(--mid)">{{ a.drive_status|capitalize }}</td>
+            <td><span class="badge b-{{ a.status }}">{{ a.status|capitalize }}</span></td>
+            <td style="font-size:13px;color:var(--light)">{{ a.applied_at.strftime('%Y-%m-%d') if a.applied_at else '—' }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <i class="bi bi-inbox"></i>
+    <p>You haven't applied to any drives yet.</p>
+  </div>
+  {% endif %}
+
+</div>
+<!-- RESUME CARD -->
+<div class="section-card">
+  <div class="sc-header">
+    <div class="sc-icon"><i class="bi bi-file-earmark-pdf"></i></div>
+    <h2>My Resume</h2>
+  </div>
+  <div class="sc-body">
+
+    {% if student.resume_path %}
+    <!-- Resume exists — show preview link + replace/delete options -->
+    <div style="display:flex;align-items:center;gap:1rem;
+                background:var(--surface);border:1px solid var(--border);
+                border-radius:10px;padding:1rem;margin-bottom:1rem">
+      <div style="width:42px;height:42px;border-radius:10px;
+                  background:#FEF2F2;color:#EF4444;flex-shrink:0;
+                  display:flex;align-items:center;justify-content:center;font-size:20px">
+        <i class="bi bi-filetype-pdf"></i>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-weight:600;font-size:14px">Resume.pdf</div>
+        <div style="font-size:12px;color:var(--light)">Uploaded · visible to companies</div>
+      </div>
+      <a href="/{{ student.resume_path }}" target="_blank"
+         style="display:inline-flex;align-items:center;gap:5px;
+                font-size:13px;font-weight:500;color:var(--blue);
+                background:var(--blue-lt);border:1px solid #BFDBFE;
+                border-radius:7px;padding:.35rem .85rem;text-decoration:none">
+        <i class="bi bi-eye"></i> View
+      </a>
+    </div>
+
+    <!-- Replace -->
+    <form method="POST" action="{{ url_for('student.upload_resume') }}"
+          enctype="multipart/form-data"
+          style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+      <input type="file" name="resume" accept=".pdf" required
+             style="flex:1;font-size:13px;border:1px solid var(--border);
+                    border-radius:8px;padding:.4rem .75rem;background:var(--white)"/>
+      <button type="submit"
+              style="white-space:nowrap;padding:.45rem 1rem;border-radius:8px;
+                     font-size:13px;font-weight:500;border:1px solid var(--border);
+                     background:var(--white);color:var(--mid);cursor:pointer">
+        <i class="bi bi-arrow-clockwise me-1"></i> Replace
+      </button>
+    </form>
+
+    <!-- Delete -->
+    <form method="POST" action="{{ url_for('student.delete_resume') }}"
+          onsubmit="return confirm('Remove your resume?')">
+      <button type="submit"
+              style="font-size:13px;color:#EF4444;background:none;
+                     border:none;padding:0;cursor:pointer;text-decoration:underline">
+        <i class="bi bi-trash3 me-1"></i> Remove resume
+      </button>
+    </form>
+
+    {% else %}
+    <!-- No resume yet -->
+    <div style="text-align:center;padding:1.5rem 1rem;
+                background:var(--surface);border:1px dashed var(--border);
+                border-radius:10px;margin-bottom:1rem">
+      <i class="bi bi-cloud-arrow-up"
+         style="font-size:2rem;color:var(--light);display:block;margin-bottom:.5rem"></i>
+      <div style="font-size:14px;font-weight:500;color:var(--dark);margin-bottom:.25rem">
+        No resume uploaded yet
+      </div>
+      <div style="font-size:12px;color:var(--light)">
+        PDF only · Max 5 MB
+      </div>
+    </div>
+
+    <form method="POST" action="{{ url_for('student.upload_resume') }}"
+          enctype="multipart/form-data">
+      <div style="display:flex;gap:8px;align-items:center">
+        <input type="file" name="resume" accept=".pdf" required
+               style="flex:1;font-size:13px;border:1px solid var(--border);
+                      border-radius:8px;padding:.4rem .75rem;background:var(--white)"/>
+        <button type="submit"
+                style="white-space:nowrap;padding:.45rem 1rem;border-radius:8px;
+                       font-size:13px;font-weight:500;border:none;
+                       background:var(--blue);color:#fff;cursor:pointer">
+          <i class="bi bi-upload me-1"></i> Upload
+        </button>
+      </div>
+    </form>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

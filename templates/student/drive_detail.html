@@ -1,0 +1,537 @@
+{% extends 'base.html' %}
+{% block title %}{{ drive.job_title }} — PlacementPlus{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ── HERO ── */
+  .drive-hero {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 2.5rem 0 2rem;
+    margin-bottom: 2rem;
+  }
+  .hero-inner { padding: 0 2rem; }
+
+  .hero-top {
+    display: flex; align-items: flex-start;
+    gap: 1.25rem; margin-bottom: 1.25rem;
+    flex-wrap: wrap;
+  }
+  .co-logo-lg {
+    width: 64px; height: 64px; border-radius: 16px;
+    background: var(--blue-lt); color: var(--blue);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 26px; flex-shrink: 0;
+    border: 2px solid rgba(37,99,235,.1);
+  }
+  .hero-titles h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.8rem; font-weight: 400;
+    margin-bottom: .25rem; line-height: 1.2;
+  }
+  .hero-titles .company-name {
+    font-size: 15px; color: var(--mid); font-weight: 500;
+  }
+  .hero-titles .company-name a {
+    color: var(--blue); text-decoration: none;
+  }
+  .hero-titles .company-name a:hover { text-decoration: underline; }
+
+  /* tag strip */
+  .tag-strip {
+    display: flex; flex-wrap: wrap; gap: 8px;
+    margin-top: 1rem;
+  }
+  .tag {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 13px; color: var(--mid);
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 7px; padding: .35rem .8rem;
+  }
+  .tag i { font-size: 12px; color: var(--light); }
+  .tag.highlight {
+    background: var(--blue-lt); border-color: #BFDBFE; color: var(--blue);
+  }
+  .tag.highlight i { color: var(--blue); }
+
+  /* ── LAYOUT ── */
+  .detail-layout {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 1.5rem;
+    align-items: start;
+  }
+  @media(max-width:960px) {
+    .detail-layout { grid-template-columns: 1fr; }
+    .sidebar-col { order: -1; }
+  }
+
+  /* ── SECTION CARD ── */
+  .section-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 14px; overflow: hidden;
+    margin-bottom: 1.25rem;
+  }
+  .sc-header {
+    padding: .9rem 1.4rem;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .sc-header h2 {
+    font-size: 14px; font-weight: 600;
+    color: var(--dark); margin: 0; flex: 1;
+  }
+  .sc-icon {
+    width: 28px; height: 28px; border-radius: 7px;
+    background: var(--blue-lt); color: var(--blue);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; flex-shrink: 0;
+  }
+  .sc-body { padding: 1.4rem; }
+
+  /* ── JOB DESCRIPTION ── */
+  .jd-body {
+    font-size: 14px; color: var(--mid);
+    line-height: 1.85; white-space: pre-wrap;
+  }
+
+  /* ── ELIGIBILITY TABLE ── */
+  .elig-table { width: 100%; border-collapse: collapse; }
+  .elig-table tr td {
+    padding: .65rem 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px; vertical-align: top;
+  }
+  .elig-table tr:last-child td { border-bottom: none; }
+  .elig-table .et-label {
+    color: var(--light); width: 40%; font-size: 13px;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .elig-table .et-label i { font-size: 13px; color: var(--blue); }
+  .elig-table .et-val { font-weight: 500; color: var(--dark); }
+
+  /* eligibility chips for branches -->*/
+  .branch-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+  .branch-chip {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 5px; padding: .2rem .6rem;
+    font-size: 12px; font-weight: 500; color: var(--mid);
+  }
+
+  /* eligibility check/cross for current student */
+  .elig-check {
+    display: inline-flex; align-items: center; gap: 5px;
+    font-size: 12px; font-weight: 500; border-radius: 6px;
+    padding: .25rem .65rem;
+  }
+  .elig-pass { background:#ECFDF5; color:#065F46; border:1px solid #A7F3D0; }
+  .elig-fail { background:#FEF2F2; color:#991B1B; border:1px solid #FECACA; }
+
+  /* ── COMPANY CARD ── */
+  .company-row {
+    display: flex; align-items: center; gap: 1rem;
+    padding: 1rem; background: var(--surface);
+    border: 1px solid var(--border); border-radius: 10px;
+    margin-bottom: .75rem;
+  }
+  .co-logo-sm {
+    width: 44px; height: 44px; border-radius: 11px;
+    background: var(--blue-lt); color: var(--blue);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 17px; flex-shrink: 0;
+  }
+  .contact-row {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 13px; color: var(--mid); padding: .35rem 0;
+  }
+  .contact-row i { color: var(--light); font-size: 13px; width: 16px; }
+
+  /* ── APPLY CARD ── */
+  .apply-card {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: 14px; overflow: hidden;
+    margin-bottom: 1.25rem;
+    position: sticky; top: 80px;
+  }
+  .apply-card .ac-body { padding: 1.25rem; }
+
+  .btn-apply {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: .7rem 1rem;
+    background: var(--blue); color: #fff;
+    border: none; border-radius: 10px;
+    font-size: 15px; font-weight: 600;
+    cursor: pointer; transition: background .15s, transform .1s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .btn-apply:hover {
+    background: var(--blue-dk); transform: translateY(-1px);
+  }
+  .btn-applied {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: .7rem 1rem;
+    background: #ECFDF5; color: #065F46;
+    border: 1px solid #A7F3D0; border-radius: 10px;
+    font-size: 15px; font-weight: 600;
+  }
+
+  .deadline-warn {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12px; color: var(--mid);
+    background: var(--surface); border-radius: 8px;
+    padding: .5rem .75rem; margin-top: .75rem;
+  }
+  .deadline-warn i { color: var(--blue); flex-shrink: 0; }
+
+  /* profile nudge */
+  .profile-nudge {
+    background: var(--blue-lt); border: 1px solid #BFDBFE;
+    border-radius: 8px; padding: .6rem .8rem;
+    font-size: 12px; color: #1E40AF;
+    margin-top: .75rem; text-align: center;
+  }
+  .profile-nudge a { color: var(--blue); font-weight: 500; text-decoration: none; }
+
+  /* ── SNAP ROWS ── */
+  .snap-row {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 13px; padding: .5rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .snap-row:last-child { border-bottom: none; }
+  .snap-row .sr-label { color: var(--light); }
+  .snap-row .sr-val   { font-weight: 500; color: var(--dark); }
+
+  /* ── BADGE ── */
+  .badge {
+    font-weight: 500; font-size: 11px;
+    padding: .32em .7em; border-radius: 6px;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .b-approved { background:#ECFDF5; color:#065F46; border:1px solid #A7F3D0; }
+  .b-closed   { background:#F1F5F9; color:#475569; border:1px solid #E2E8F0; }
+
+  /* ── SIMILAR DRIVES ── */
+  .mini-drive {
+    display: flex; align-items: center; gap: .85rem;
+    padding: .75rem 0; border-bottom: 1px solid var(--border);
+    text-decoration: none; transition: padding .15s;
+  }
+  .mini-drive:last-child { border-bottom: none; }
+  .mini-drive:hover { padding-left: 4px; }
+  .mini-logo {
+    width: 34px; height: 34px; border-radius: 8px;
+    background: var(--blue-lt); color: var(--blue);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 13px; flex-shrink: 0;
+  }
+  .mini-title { font-size: 13px; font-weight: 600; color: var(--dark); }
+  .mini-co    { font-size: 12px; color: var(--light); }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- HERO -->
+<div class="drive-hero">
+  <div class="hero-inner container-fluid">
+    <a href="{{ url_for('student.drives') }}"
+       style="font-size:13px;color:var(--mid);text-decoration:none;
+              display:inline-flex;align-items:center;gap:5px;margin-bottom:1rem">
+      <i class="bi bi-arrow-left"></i> Browse Drives
+    </a>
+
+    <div class="hero-top">
+      <div class="co-logo-lg">{{ drive.company_name[0]|upper }}</div>
+      <div class="hero-titles">
+        <h1>{{ drive.job_title }}</h1>
+        <div class="company-name">
+          {{ drive.company_name }}
+          {% if drive.website %}
+          &nbsp;·&nbsp;
+          <a href="{{ drive.website }}" target="_blank">
+            <i class="bi bi-box-arrow-up-right" style="font-size:11px"></i>
+            Website
+          </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Tag strip -->
+    <div class="tag-strip">
+      <span class="tag">
+        <i class="bi bi-briefcase"></i>
+        {{ drive.job_type.replace('_',' ')|capitalize }}
+      </span>
+      {% if drive.location %}
+      <span class="tag">
+        <i class="bi bi-geo-alt"></i>{{ drive.location }}
+      </span>
+      {% endif %}
+      {% if drive.salary_package %}
+      <span class="tag highlight">
+        <i class="bi bi-currency-rupee"></i>{{ drive.salary_package }}
+      </span>
+      {% endif %}
+      <span class="tag">
+        <i class="bi bi-calendar3"></i>
+        Deadline: {{ drive.application_deadline }}
+      </span>
+      <span class="tag">
+        <i class="bi bi-mortarboard"></i>
+        Min CGPA: {{ drive.eligibility_cgpa if drive.eligibility_cgpa > 0 else 'None' }}
+      </span>
+    </div>
+
+  </div>
+</div>
+
+<div class="container-fluid px-4">
+  <div class="detail-layout">
+
+    <!-- ── LEFT: MAIN CONTENT ── -->
+    <div>
+
+      <!-- Job Description -->
+      <div class="section-card">
+        <div class="sc-header">
+          <div class="sc-icon"><i class="bi bi-file-text"></i></div>
+          <h2>Job Description</h2>
+        </div>
+        <div class="sc-body">
+          {% if drive.job_description %}
+          <p class="jd-body">{{ drive.job_description }}</p>
+          {% else %}
+          <p style="color:var(--light);font-size:14px">No description provided.</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Eligibility -->
+      <div class="section-card">
+        <div class="sc-header">
+          <div class="sc-icon"><i class="bi bi-mortarboard"></i></div>
+          <h2>Eligibility Criteria</h2>
+        </div>
+        <div class="sc-body">
+          <table class="elig-table">
+            <tr>
+              <td class="et-label"><i class="bi bi-graph-up"></i> Minimum CGPA</td>
+              <td class="et-val">
+                {% if drive.eligibility_cgpa and drive.eligibility_cgpa > 0 %}
+                  {{ drive.eligibility_cgpa }}
+                {% else %}
+                  <span style="color:var(--mid);font-weight:400">No minimum</span>
+                {% endif %}
+              </td>
+            </tr>
+            <tr>
+              <td class="et-label"><i class="bi bi-diagram-3"></i> Eligible Branches</td>
+              <td class="et-val">
+                {% if drive.eligible_branches %}
+                <div class="branch-chips">
+                  {% for b in drive.eligible_branches.split(',') %}
+                  <span class="branch-chip">{{ b.strip() }}</span>
+                  {% endfor %}
+                </div>
+                {% else %}
+                <span style="color:var(--mid);font-weight:400">All branches</span>
+                {% endif %}
+              </td>
+            </tr>
+            <tr>
+              <td class="et-label"><i class="bi bi-calendar2-week"></i> Eligible Years</td>
+              <td class="et-val">
+                {% if drive.eligible_years %}
+                  {% for y in drive.eligible_years.split(',') %}
+                  Year {{ y.strip() }}{% if not loop.last %}, {% endif %}
+                  {% endfor %}
+                {% else %}
+                <span style="color:var(--mid);font-weight:400">All years</span>
+                {% endif %}
+              </td>
+            </tr>
+          </table>
+        </div>
+      </div>
+
+      <!-- Company Info -->
+      <div class="section-card">
+        <div class="sc-header">
+          <div class="sc-icon"><i class="bi bi-building"></i></div>
+          <h2>About the Company</h2>
+        </div>
+        <div class="sc-body">
+          <div class="company-row">
+            <div class="co-logo-sm">{{ drive.company_name[0]|upper }}</div>
+            <div>
+              <div style="font-weight:600;font-size:15px">{{ drive.company_name }}</div>
+              {% if drive.website %}
+              <a href="{{ drive.website }}" target="_blank"
+                 style="font-size:13px;color:var(--blue);text-decoration:none">
+                <i class="bi bi-box-arrow-up-right me-1" style="font-size:11px"></i>
+                {{ drive.website }}
+              </a>
+              {% endif %}
+            </div>
+          </div>
+
+          <!-- HR contact -->
+          {% if drive.hr_contact_name %}
+          <div style="margin-top:.75rem">
+            <div style="font-size:11px;color:var(--light);text-transform:uppercase;
+                        letter-spacing:.05em;margin-bottom:.5rem">HR Contact</div>
+            <div class="contact-row">
+              <i class="bi bi-person"></i>
+              <span>{{ drive.hr_contact_name }}</span>
+            </div>
+            {% if drive.hr_contact_email %}
+            <div class="contact-row">
+              <i class="bi bi-envelope"></i>
+              <a href="mailto:{{ drive.hr_contact_email }}"
+                 style="color:var(--blue);text-decoration:none">
+                {{ drive.hr_contact_email }}
+              </a>
+            </div>
+            {% endif %}
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── RIGHT: SIDEBAR ── -->
+    <div class="sidebar-col">
+
+      <!-- APPLY CARD -->
+      <div class="apply-card">
+        <div class="ac-body">
+
+          {% if already_applied %}
+          <!-- Already applied state -->
+          <div class="btn-applied">
+            <i class="bi bi-check-circle-fill"></i>
+            Application Submitted
+          </div>
+          <p style="font-size:13px;color:var(--mid);text-align:center;margin-top:.75rem;margin-bottom:0">
+            You applied to this drive.
+            <a href="{{ url_for('student.my_applications') }}"
+               style="color:var(--blue);text-decoration:none;font-weight:500">
+              Track status <i class="bi bi-arrow-right" style="font-size:11px"></i>
+            </a>
+          </p>
+
+          {% elif drive.status == 'closed' %}
+          <!-- Drive closed -->
+          <div style="text-align:center;padding:.5rem 0">
+            <i class="bi bi-lock-fill" style="font-size:2rem;color:var(--light);display:block;margin-bottom:.5rem"></i>
+            <div style="font-size:14px;font-weight:600;color:var(--dark)">Drive Closed</div>
+            <p style="font-size:13px;color:var(--light);margin-top:.25rem">
+              This drive is no longer accepting applications.
+            </p>
+          </div>
+
+          {% else %}
+          <!-- Apply form -->
+          <form method="POST"
+                action="{{ url_for('student.apply', drive_id=drive.id) }}"
+                onsubmit="return confirm('Apply to {{ drive.job_title }} at {{ drive.company_name }}? Make sure your profile is up to date.')">
+            <button type="submit" class="btn-apply">
+              <i class="bi bi-send-fill"></i> Apply Now
+            </button>
+          </form>
+
+          <div class="deadline-warn">
+            <i class="bi bi-clock"></i>
+            Applications close on <strong>&nbsp;{{ drive.application_deadline }}</strong>
+          </div>
+
+          <div class="profile-nudge">
+            Make sure your profile is updated before applying.
+            <a href="{{ url_for('student.edit_profile') }}">Update profile</a>
+          </div>
+          {% endif %}
+
+        </div>
+
+        <!-- Snapshot rows -->
+        <div style="border-top:1px solid var(--border);padding:1rem 1.25rem">
+          <div class="snap-row">
+            <span class="sr-label">Status</span>
+            <span class="sr-val">
+              <span class="badge b-{{ drive.status }}">{{ drive.status|capitalize }}</span>
+            </span>
+          </div>
+          <div class="snap-row">
+            <span class="sr-label">Job Type</span>
+            <span class="sr-val">{{ drive.job_type.replace('_',' ')|capitalize }}</span>
+          </div>
+          {% if drive.salary_package %}
+          <div class="snap-row">
+            <span class="sr-label">Package</span>
+            <span class="sr-val" style="color:var(--blue)">{{ drive.salary_package }}</span>
+          </div>
+          {% endif %}
+          {% if drive.location %}
+          <div class="snap-row">
+            <span class="sr-label">Location</span>
+            <span class="sr-val">{{ drive.location }}</span>
+          </div>
+          {% endif %}
+          <div class="snap-row">
+            <span class="sr-label">Deadline</span>
+            <span class="sr-val">{{ drive.application_deadline }}</span>
+          </div>
+          <div class="snap-row">
+            <span class="sr-label">Min CGPA</span>
+            <span class="sr-val">
+              {{ drive.eligibility_cgpa if drive.eligibility_cgpa > 0 else 'No minimum' }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick links -->
+      <div class="section-card">
+        <div class="sc-header">
+          <div class="sc-icon"><i class="bi bi-lightning"></i></div>
+          <h2>Quick Links</h2>
+        </div>
+        <div class="sc-body" style="padding:.75rem 1rem;display:flex;flex-direction:column;gap:6px">
+          <a href="{{ url_for('student.drives') }}"
+             style="display:flex;align-items:center;gap:8px;
+                    font-size:13px;color:var(--mid);text-decoration:none;
+                    padding:.5rem .75rem;border-radius:8px;transition:all .15s"
+             onmouseover="this.style.background='var(--surface)';this.style.color='var(--blue)'"
+             onmouseout="this.style.background='';this.style.color='var(--mid)'">
+            <i class="bi bi-briefcase" style="color:var(--blue)"></i>
+            Browse all drives
+          </a>
+          <a href="{{ url_for('student.my_applications') }}"
+             style="display:flex;align-items:center;gap:8px;
+                    font-size:13px;color:var(--mid);text-decoration:none;
+                    padding:.5rem .75rem;border-radius:8px;transition:all .15s"
+             onmouseover="this.style.background='var(--surface)';this.style.color='var(--blue)'"
+             onmouseout="this.style.background='';this.style.color='var(--mid)'">
+            <i class="bi bi-file-earmark-text" style="color:var(--blue)"></i>
+            My applications
+          </a>
+          <a href="{{ url_for('student.edit_profile') }}"
+             style="display:flex;align-items:center;gap:8px;
+                    font-size:13px;color:var(--mid);text-decoration:none;
+                    padding:.5rem .75rem;border-radius:8px;transition:all .15s"
+             onmouseover="this.style.background='var(--surface)';this.style.color='var(--blue)'"
+             onmouseout="this.style.background='';this.style.color='var(--mid)'">
+            <i class="bi bi-person-gear" style="color:var(--blue)"></i>
+            Update my profile
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
